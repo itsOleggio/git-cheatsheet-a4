@@ -1,16 +1,3 @@
-/* eslint-disable */
-// @ts-nocheck
-import {initFilter} from './features/filter';
-import {initCopy} from './features/clipboard';
-import {initTooltip} from './features/tooltip';
-import {COMMIT_HISTORY} from './data/commits';
-import {renderCommitLog} from './render/commitLog';
-import {createCommandLookup,renderSections} from './render/sections';
-import {initTitleAlign} from './render/titleAlign';
-import {svg as el} from './utils/dom';
-import {renderBranchGraph} from './render/branchGraph';
-import {LANE_COLORS as LANES,SECTIONS as S} from './data/commands';
-import {DESCRIPTIONS as LONG} from './data/descriptions';
 import './styles/tokens.css';
 import './styles/base.css';
 import './styles/sheet.css';
@@ -18,22 +5,46 @@ import './styles/sheet1.css';
 import './styles/sheet2.css';
 import './styles/print.css';
 
-const G=document.getElementById("graph");
-const graph=renderBranchGraph(G);
+import { COMMIT_HISTORY } from './data/commits';
+import { SECTIONS } from './data/commands';
+import { DESCRIPTIONS } from './data/descriptions';
+import { initCopy } from './features/clipboard';
+import { initFilter } from './features/filter';
+import { initTooltip } from './features/tooltip';
+import { renderBranchGraph } from './render/branchGraph';
+import { renderCommitLog } from './render/commitLog';
+import { createCommandLookup, renderSections } from './render/sections';
+import { renderSheet1 } from './render/sheet1';
+import { renderSheet2 } from './render/sheet2';
+import { initTitleAlign } from './render/titleAlign';
+import { byId } from './utils/dom';
 
-initTitleAlign({title:document.getElementById("ttl"),middleLine:document.getElementById("ttl-mid"),graph:G});
+renderSheet1(byId('sheet', HTMLElement));
+renderSheet2(byId('sheet2', HTMLElement));
 
-const grid=document.getElementById("grid");
-const rendered=renderSections(grid,S,graph);
-const lookup=createCommandLookup(rendered);
+const graphRoot = byId('graph', SVGSVGElement);
+const graph = renderBranchGraph(graphRoot);
+initTitleAlign({
+  title: byId('ttl', HTMLElement),
+  middleLine: byId('ttl-mid', HTMLElement),
+  graph: graphRoot,
+});
 
-initTooltip(grid,document.getElementById("tip"),lookup,LONG);
+const grid = byId('grid', HTMLElement);
+const sections = renderSections(grid, SECTIONS, graph);
+const lookup = createCommandLookup(sections);
 
+const log = byId('log', SVGSVGElement);
+renderCommitLog(log, COMMIT_HISTORY);
 
-
-renderCommitLog(document.getElementById("log"),COMMIT_HISTORY);
-
-initCopy({grid,log:document.getElementById("log"),fullMessage:document.getElementById("fullmsg"),toast:document.getElementById("toast"),lookup});
-
-initFilter(rendered,document.getElementById("q"),[...document.querySelectorAll(".seg button")]);
-
+initTooltip(grid, byId('tip', HTMLElement), lookup, DESCRIPTIONS);
+initCopy({
+  grid,
+  log,
+  fullMessage: byId('fullmsg', HTMLElement),
+  toast: byId('toast', HTMLElement),
+  lookup,
+});
+initFilter(sections, byId('q', HTMLInputElement), [
+  ...document.querySelectorAll<HTMLButtonElement>('.seg button'),
+]);

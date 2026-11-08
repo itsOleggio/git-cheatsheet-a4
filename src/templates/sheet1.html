@@ -1,0 +1,43 @@
+  <header>
+    <h1 id="ttl"><span class="ln">git</span><span class="ln" id="ttl-mid">cheat</span><span class="ln">sheet</span></h1>
+    <svg class="graph" id="graph" viewBox="0 0 520 150" role="img" aria-label="Граф веток main, feature, hotfix, release"></svg>
+      <div class="legend">
+        <span><b style="background:var(--main)"></b>main</span>
+        <span><b style="background:var(--feat)"></b>feature/*</span>
+        <span><b style="background:var(--fix)"></b>hotfix/*</span>
+        <span><b style="background:var(--rel)"></b>release/*</span>
+        <span><span class="badge new">NEW</span> 2.23+</span>
+        <span><span class="badge old">OLD</span> классика</span>
+        <span style="color:var(--warn)">⚠ теряет данные</span>
+      </div>
+    <div class="sub">A4 · Git 2.23 → 2.4x</div>
+  </header>
+  <div class="grid" id="grid"></div>
+  <section class="naming" aria-label="Именование веток">
+    <h2>Именование веток <span class="fmt">&lt;тип&gt;/&lt;ТИКЕТ&gt;-&lt;кратко-что-делаем&gt;</span></h2>
+    <table class="ntab" id="ntab">
+      <tr style="--c:var(--feat)"><td>feature/</td><td>новая фича (feat/)</td><td class="ex">feature/SHOP-142-cart-promo-code</td></tr>
+      <tr style="--c:var(--fix)"><td>bugfix/</td><td>баг до релиза (fix/)</td><td class="ex">bugfix/SHOP-201-price-rounding</td></tr>
+      <tr style="--c:var(--warn)"><td>hotfix/</td><td>срочно в прод, от main</td><td class="ex">hotfix/1.4.1-payment-timeout</td></tr>
+      <tr style="--c:var(--rel)"><td>release/</td><td>версия по SemVer</td><td class="ex">release/1.5.0</td></tr>
+      <tr style="--c:var(--muted)"><td>task/</td><td>настройка, миграция</td><td class="ex">task/SHOP-88-migrate-to-vite</td></tr>
+      <tr style="--c:var(--muted)"><td>refactor/</td><td>без смены поведения</td><td class="ex">refactor/SHOP-95-auth-hooks</td></tr>
+      <tr style="--c:var(--muted)"><td>chore/</td><td>зависимости, CI, конфиги</td><td class="ex">chore/bump-react-19</td></tr>
+      <tr style="--c:var(--muted)"><td>docs/ · test/</td><td>документация · тесты</td><td class="ex">docs/SHOP-77-api-readme</td></tr>
+      <tr style="--c:var(--main)"><td>main · develop</td><td>прод · интеграция</td><td class="ex">main</td></tr>
+    </table>
+    <div class="rules">
+      <div><span class="ok">✓</span> <b>латиница, нижний регистр, kebab-case</b>: <code>user-login</code></div>
+      <div><span class="ok">✓</span> <b>ID задачи из Jira/YouTrack</b> в имени — ветка, PR и тикет свяжутся автоматически</div>
+      <div><span class="ok">✓</span> <b>2–5 слов</b>, глагол или суть: <code>fix-null-avatar</code></div>
+      <div><span class="ok">✓</span> тип ветки совпадает с префиксом коммитов: <code>feat:</code> <code>fix:</code> <code>chore:</code> (Conventional Commits)</div>
+      <div><span class="no">✗</span> <code>Feature/Новая_Кнопка</code>, <code>test123</code>, <code>oleg-branch</code>, <code>fix</code></div>
+      <div><span class="no">✗</span> пробелы, кириллица, <code>~ ^ : ? * [ \</code>, двойные точки</div>
+      <div class="flows">
+        <div><b>Git Flow</b> — main + develop + release/hotfix, релизы по версиям</div>
+        <div><b>GitHub Flow</b> — main + короткие feature-ветки через PR</div>
+        <div><b>Trunk-based</b> — ветки ≤ 1–2 дня, фичи за флагами</div>
+      </div>
+    </div>
+  </section>
+  <footer><span>Клик по команде — копировать · наведи — подсказка</span><span>1 / 2</span></footer>

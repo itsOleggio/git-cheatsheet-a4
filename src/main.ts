@@ -1,5 +1,6 @@
 /* eslint-disable */
 // @ts-nocheck
+import {initFilter} from './features/filter';
 import {initCopy} from './features/clipboard';
 import {initTooltip} from './features/tooltip';
 import {COMMIT_HISTORY} from './data/commits';
@@ -34,23 +35,5 @@ renderCommitLog(document.getElementById("log"),COMMIT_HISTORY);
 
 initCopy({grid,log:document.getElementById("log"),fullMessage:document.getElementById("fullmsg"),toast:document.getElementById("toast"),lookup});
 
-// Filter + search
-let F="all";const q=document.getElementById("q");
-function apply(){
-  const s=q.value.trim().toLowerCase();
-  document.querySelectorAll(".sec").forEach(sec=>{
-    let any=false;
-    sec.querySelectorAll(".cmd").forEach(b=>{
-      const c=lookup(b).command,okF=F==="all"||c.era===F,okS=!s||(c.command+" "+c.label+" "+(c.hint||"")).toLowerCase().includes(s);
-      b.hidden=!(okF&&okS);if(!b.hidden)any=true;
-    });
-    sec.querySelectorAll(".pair").forEach(p=>p.hidden=F!=="all"||!!s);
-    sec.hidden=!any;
-  });
-}
-document.querySelectorAll(".seg button").forEach(b=>b.addEventListener("click",()=>{
-  F=b.dataset.f;document.querySelectorAll(".seg button").forEach(x=>x.setAttribute("aria-pressed",x===b));apply();
-  try{localStorage.setItem("gitcs-f",F)}catch(_){}
-}));
-q.addEventListener("input",apply);
-try{const s=localStorage.getItem("gitcs-f");if(s){document.getElementById("f-"+s)?.click()}}catch(_){}
+initFilter(rendered,document.getElementById("q"),[...document.querySelectorAll(".seg button")]);
+

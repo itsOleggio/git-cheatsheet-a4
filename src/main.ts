@@ -1,5 +1,6 @@
 /* eslint-disable */
 // @ts-nocheck
+import {initTooltip} from './features/tooltip';
 import {COMMIT_HISTORY} from './data/commits';
 import {renderCommitLog} from './render/commitLog';
 import {createCommandLookup,renderSections} from './render/sections';
@@ -24,22 +25,7 @@ const grid=document.getElementById("grid");
 const rendered=renderSections(grid,S,graph);
 const lookup=createCommandLookup(rendered);
 
-// Tooltip
-const tip=document.getElementById("tip");
-grid.addEventListener("mousemove",e=>{
-  const b=e.target.closest(".cmd");if(!b){tip.hidden=true;return}
-  const c=lookup(b).command;tip.innerHTML="";
-  const code=document.createElement("code");code.textContent=c.command;tip.append(code);
-  const h=document.createElement("div");h.className="tl";h.textContent=c.label[0].toUpperCase()+c.label.slice(1)+(c.era==="new"?" · новый способ":c.era==="old"?" · старый способ":"");tip.append(h);
-  const d=document.createElement("div");d.textContent=LONG[c.command]||c.hint||"";tip.append(d);
-  if(c.hint&&LONG[c.command]){const x=document.createElement("div");x.className="ex";x.textContent="→ "+c.hint;tip.append(x)}
-  if(c.warning){const w=document.createElement("div");w.className="w";w.textContent="⚠ "+c.warning;tip.append(w)}
-  tip.hidden=false;
-  const r=tip.getBoundingClientRect();let x=e.clientX+14,y=e.clientY+14;
-  if(x+r.width>innerWidth-8)x=e.clientX-r.width-14;if(y+r.height>innerHeight-8)y=e.clientY-r.height-14;
-  tip.style.left=Math.max(8,x)+"px";tip.style.top=Math.max(8,y)+"px";
-});
-grid.addEventListener("mouseleave",()=>tip.hidden=true);
+initTooltip(grid,document.getElementById("tip"),lookup,LONG);
 
 // Copy
 const toast=document.getElementById("toast");let tt;

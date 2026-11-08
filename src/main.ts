@@ -1,5 +1,6 @@
 /* eslint-disable */
 // @ts-nocheck
+import {initTitleAlign} from './render/titleAlign';
 import {svg as el} from './utils/dom';
 import {renderBranchGraph} from './render/branchGraph';
 import {LANE_COLORS as LANES,SECTIONS as S} from './data/commands';
@@ -14,17 +15,7 @@ import './styles/print.css';
 const G=document.getElementById("graph");
 const graph=renderBranchGraph(G);
 
-// Align the middle title line with the main branch
-function alignTitle(){
-  const h=document.getElementById("ttl"),m=document.getElementById("ttl-mid");
-  h.style.top="0px";
-  if(innerWidth<=760)return;
-  const g=G.getBoundingClientRect(),mr=m.getBoundingClientRect();
-  const mainY=g.top+g.height*60/150, midY=mr.top+mr.height/2;
-  h.style.top=(mainY-midY)+"px";
-}
-addEventListener("resize",alignTitle);
-(document.fonts?document.fonts.ready:Promise.resolve()).then(alignTitle);alignTitle();
+initTitleAlign({title:document.getElementById("ttl"),middleLine:document.getElementById("ttl-mid"),graph:G});
 
 // Sections
 const grid=document.getElementById("grid");

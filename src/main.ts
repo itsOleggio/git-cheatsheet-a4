@@ -1,5 +1,7 @@
 /* eslint-disable */
 // @ts-nocheck
+import {svg as el} from './utils/dom';
+import {renderBranchGraph} from './render/branchGraph';
 import {LANE_COLORS as LANES,SECTIONS as S} from './data/commands';
 import {DESCRIPTIONS as LONG} from './data/descriptions';
 import './styles/tokens.css';
@@ -9,28 +11,8 @@ import './styles/sheet1.css';
 import './styles/sheet2.css';
 import './styles/print.css';
 
-// Graph
-const G=document.getElementById("graph"),NS="http://www.w3.org/2000/svg";
-const el=(t,a)=>{const e=document.createElementNS(NS,t);for(const k in a)e.setAttribute(k,a[k]);return e};
-const Y={rel:20,main:60,feat:100,fix:135};
-const lanes={
-  main:{path:"M10 60 H510",dots:[[30,60],[90,60],[160,60],[250,60],[330,60],[400,60],[480,60]],label:"main"},
-  feat:{path:"M90 60 C110 60 110 100 130 100 H230 C250 100 250 60 250 60",dots:[[150,100],[190,100],[220,100]],label:"feature/login"},
-  fix:{path:"M330 60 C345 60 345 135 360 135 H380 C395 135 400 60 400 60",dots:[[365,135]],label:"hotfix/42"},
-  rel:{path:"M250 60 C265 60 265 20 280 20 H440 C460 20 460 60 480 60",dots:[[300,20],[360,20],[420,20]],label:"release/1.2"},
-};
-for(const k of ["feat","fix","rel","main"]){
-  const g=el("g",{class:"lane","data-l":k});
-  g.append(el("path",{d:lanes[k].path,fill:"none",stroke:LANES[k],"stroke-width":3,"stroke-linecap":"round"}));
-  lanes[k].dots.forEach(([x,y])=>g.append(el("circle",{cx:x,cy:y,r:5,fill:"var(--sheet)",stroke:LANES[k],"stroke-width":2.5})));
-  const lx={main:14,feat:132,fix:300,rel:282}[k], ly={main:52,feat:118,fix:145,rel:12}[k];
-  const t=el("text",{x:lx,y:ly,fill:LANES[k],"font-family":"JetBrains Mono, monospace","font-size":9});t.textContent=lanes[k].label;g.append(t);
-  G.append(g);
-}
-const hd=el("g",{});hd.append(el("rect",{x:462,y:66,width:38,height:14,rx:3,fill:"var(--fg)"}));
-const ht=el("text",{x:468,y:76,fill:"var(--bg)","font-family":"JetBrains Mono, monospace","font-size":8.5,"font-weight":700});ht.textContent="HEAD";hd.append(ht);
-const tg=el("text",{x:394,y:52,fill:"var(--tag)","font-family":"JetBrains Mono, monospace","font-size":8.5});tg.textContent="◆ v1.1.1";
-G.append(hd,tg);
+const G=document.getElementById("graph");
+const graph=renderBranchGraph(G);
 
 // Align the middle title line with the main branch
 function alignTitle(){

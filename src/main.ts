@@ -1,5 +1,7 @@
 /* eslint-disable */
 // @ts-nocheck
+import {COMMIT_HISTORY} from './data/commits';
+import {renderCommitLog} from './render/commitLog';
 import {createCommandLookup,renderSections} from './render/sections';
 import {initTitleAlign} from './render/titleAlign';
 import {svg as el} from './utils/dom';
@@ -53,58 +55,7 @@ document.querySelectorAll(".ntab .ex").forEach(td=>{td.title="Скопирова
 })});
 
 
-// ---- Sheet 2: commit log graph ----
-(function(){
-  const L=document.getElementById("log"),X={main:22,feat:46,hot:70},RH=24,T=14;
-  const TC={feat:"var(--feat)",fix:"var(--fix)",refactor:"#2dd4bf",perf:"#facc15",test:"#a3e635",docs:"var(--rel)",ci:"var(--muted)",chore:"var(--muted)",build:"var(--muted)",style:"var(--muted)",revert:"var(--warn)"};
-  const R=[
-    {l:"main",h:"e41b7d2",m:"chore(release): 1.5.0 [skip ci]",tag:"v1.5.0"},
-    {l:"main",h:"9c03a1f",m:"Merge pull request #142 from feature/SHOP-142-cart-promo-code",merge:true},
-    {l:"feat",h:"5d2e8b0",m:"test(cart): cover promo code validation"},
-    {l:"main",h:"77af3c4",m:"Merge pull request #151 from hotfix/1.4.1-payment-timeout",merge:true,tag:"v1.4.1"},
-    {l:"hot", h:"b18f6e9",m:"fix(payment): retry request on gateway timeout"},
-    {l:"feat",h:"c4a9e12",m:"refactor(cart): extract usePromoCode hook"},
-    {l:"feat",h:"0f6d3ab",m:"feat(cart): add promo code field"},
-    {l:"main",h:"3e8c5a7",m:"chore(release): 1.4.0 [skip ci]",tag:"v1.4.0"},
-    {l:"main",h:"a29d4f1",m:"ci: cache npm dependencies in GitHub Actions"},
-    {l:"main",h:"1b7e0c3",m:"chore: init project with Vite + React"},
-  ];
-  const y=i=>T+i*RH, P=(d,c,w=2.5)=>L.append(el("path",{d,fill:"none",stroke:c,"stroke-width":w,"stroke-linecap":"round"}));
-  const curve=(x1,y1,x2,y2)=>`M${x1} ${y1} C${x1} ${(y1+y2)/2} ${x2} ${(y1+y2)/2} ${x2} ${y2}`;
-  // lanes
-  P(`M${X.main} ${y(0)} V${y(9)}`,"var(--main)");
-  P(`M${X.feat} ${y(2)} V${y(6)}`,"var(--feat)");
-  P(curve(X.main,y(8),X.feat,y(6)),"var(--feat)");     // branch feature from row 8
-  P(curve(X.feat,y(2),X.main,y(1)),"var(--feat)");     // merge feature into row 1
-  P(curve(X.main,y(7),X.hot,y(4)),"var(--fix)");       // hotfix from row 7
-  P(curve(X.hot,y(4),X.main,y(3)),"var(--fix)");       // merge hotfix into row 3
-  // lane labels
-  [["main",X.main,"var(--main)"],["feature/SHOP-142-cart-promo-code",X.feat,"var(--feat)"],["hotfix/1.4.1",X.hot,"var(--fix)"]];
-  const lab=(t,x,yy,c)=>{const e=el("text",{x,y:yy,fill:c,"font-family":"JetBrains Mono, monospace","font-size":9});e.textContent=t;L.append(e)};
-  const LC={main:"var(--main)",feat:"var(--feat)",hot:"var(--fix)"};
-  R.forEach((r,i)=>{
-    const g=el("g",{class:"row",tabindex:0,role:"button","aria-label":"Скопировать: "+r.m});g.dataset.copy=r.m;
-    g.append(el("rect",{class:"hl",x:100,y:y(i)-10,width:636,height:20,rx:3,fill:"transparent"}));
-    g.append(el("circle",{cx:X[r.l],cy:y(i),r:r.merge?6:5,fill:r.merge?LC[r.l]:"var(--sheet)",stroke:LC[r.l],"stroke-width":2.5}));
-    const tx=el("text",{x:108,y:y(i)+3.5,"font-family":"JetBrains Mono, monospace","font-size":10.5});
-    const ts=(t,a)=>{const e=el("tspan",a);e.textContent=t;tx.append(e);return e};
-    ts(r.h+"  ",{fill:"var(--muted)"});
-    const m=r.m.match(/^(\w+)(\([^)]*\))?(!)?:\s(.*)$/);
-    if(m){
-      ts(m[1],{fill:TC[m[1]]||"var(--fg)","font-weight":700});
-      if(m[2])ts(m[2],{fill:"var(--rel)"});
-      if(m[3])ts("!",{fill:"var(--warn)"});
-      ts(": "+m[4],{fill:"var(--fg)"});
-    } else ts(r.m,{fill:"var(--muted)"});
-    g.append(tx);
-    if(r.tag){
-      const w=r.tag.length*6.4+12, bx=736-w;
-      g.append(el("rect",{x:bx,y:y(i)-8,width:w,height:16,rx:3,fill:"none",stroke:"var(--tag)","stroke-width":1}));
-      const t=el("text",{x:bx+6,y:y(i)+3.5,fill:"var(--tag)","font-family":"JetBrains Mono, monospace","font-size":9.5,"font-weight":700});t.textContent=r.tag;g.append(t);
-    }
-    L.append(g);
-  });
-})();
+renderCommitLog(document.getElementById("log"),COMMIT_HISTORY);
 
 // generic copy for sheet 2
 function copyText(t){try{navigator.clipboard.writeText(t).then(()=>show("Скопировано: "+t.split("\n")[0]),()=>show(t.split("\n")[0]))}catch(_){show(t.split("\n")[0])}}

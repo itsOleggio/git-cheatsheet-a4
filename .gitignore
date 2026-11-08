@@ -11,3 +11,9 @@ desktop.ini
 # Локальные выгрузки
 *.pdf
 node_modules/
+
+# Сборка и отчёты
+dist/
+coverage/
+test-results/
+playwright-report/

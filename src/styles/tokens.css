@@ -1,0 +1,19 @@
+:root {
+  color-scheme: dark;
+  --bg: #08090b;
+  --sheet: #0d0f12;
+  --line: #1d2128;
+  --fg: #e7e9ee;
+  --muted: #8a90a0;
+  --main: #4ade80;
+  --feat: #b085ff;
+  --fix: #ff9a3c;
+  --rel: #4cc9f0;
+  --tag: #f472b6;
+  --new: #4ade80;
+  --old: #8a90a0;
+  --warn: #ff6b6b;
+  --f-display: 'Unbounded', 'Arial Black', sans-serif;
+  --f-body: 'IBM Plex Sans', 'Segoe UI', system-ui, sans-serif;
+  --f-mono: 'JetBrains Mono', ui-monospace, 'Cascadia Mono', Consolas, monospace;
+}

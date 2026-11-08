@@ -1,0 +1,210 @@
+.naming {
+  border-top: 1px solid var(--line);
+  padding-top: 10px;
+  display: grid;
+  grid-template-columns: minmax(0, 1.55fr) minmax(0, 1fr);
+  gap: 8px 18px;
+}
+.naming h2 {
+  grid-column: 1/-1;
+  font: 500 11px var(--f-display);
+  margin: 0;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--fg);
+}
+.naming h2 .fmt {
+  font: 600 11px var(--f-mono);
+  text-transform: none;
+  letter-spacing: 0;
+  color: var(--rel);
+  margin-left: 8px;
+}
+.ntab {
+  border-collapse: collapse;
+  width: 100%;
+  font-size: 9.5px;
+}
+.ntab td {
+  padding: 2px 6px 2px 0;
+  vertical-align: baseline;
+  border-bottom: 1px solid var(--line);
+}
+.ntab tr:last-child td {
+  border-bottom: 0;
+}
+.ntab td:first-child {
+  font: 700 10px var(--f-mono);
+  color: var(--c);
+  white-space: nowrap;
+}
+.ntab td:nth-child(2) {
+  color: var(--muted);
+}
+.ntab .ex {
+  font: 10px var(--f-mono);
+  color: var(--fg);
+  white-space: nowrap;
+  cursor: pointer;
+  text-align: right;
+}
+.ntab .ex:hover {
+  color: var(--rel);
+}
+.rules {
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+  font-size: 9.5px;
+  color: var(--muted);
+  min-width: 0;
+}
+.rules b {
+  color: var(--fg);
+  font-weight: 500;
+}
+.rules code {
+  font: 600 9.5px var(--f-mono);
+  color: var(--fg);
+}
+.rules .ok {
+  color: var(--main);
+}
+.rules .no {
+  color: var(--warn);
+}
+.flows {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  border-top: 1px solid var(--line);
+  padding-top: 6px;
+}
+.graph {
+  width: 100%;
+  height: auto;
+  display: block;
+}
+.graph .lane {
+  transition:
+    opacity 0.2s,
+    stroke-width 0.2s;
+}
+.graph.dim .lane {
+  opacity: 0.18;
+}
+.graph.dim .lane.on {
+  opacity: 1;
+}
+.badge {
+  font: 700 8px var(--f-mono);
+  padding: 1px 4px;
+  border-radius: 3px;
+  letter-spacing: 0.05em;
+  vertical-align: 1px;
+}
+.badge.new {
+  background: var(--new);
+  color: var(--bg);
+}
+.badge.old {
+  border: 1px solid var(--old);
+  color: var(--old);
+}
+.grid {
+  flex: 1;
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 8px 14px;
+  align-content: start;
+}
+.sec {
+  border-left: 2px solid var(--c);
+  padding: 0 0 4px 12px;
+  position: relative;
+  min-width: 0;
+}
+.sec::before {
+  content: '';
+  position: absolute;
+  left: -6px;
+  top: 2px;
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  background: var(--sheet);
+  border: 2px solid var(--c);
+}
+.sec h2 {
+  font: 500 11px var(--f-display);
+  margin: 0 0 6px;
+  color: var(--c);
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+.cmd {
+  display: flex;
+  gap: 6px;
+  align-items: baseline;
+  width: 100%;
+  text-align: left;
+  background: none;
+  border: 0;
+  color: inherit;
+  padding: 2px 4px;
+  margin-left: -4px;
+  border-radius: 3px;
+  cursor: pointer;
+  font: inherit;
+}
+.cmd:hover {
+  background: var(--line);
+}
+.cmd code {
+  font: 600 10.5px/1.35 var(--f-mono);
+  color: var(--fg);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  min-width: 0;
+}
+.cmd .d {
+  font-size: 9.5px;
+  color: var(--muted);
+  margin-left: auto;
+  white-space: nowrap;
+  flex-shrink: 0;
+  max-width: 44%;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.cmd.danger code::after {
+  content: ' ⚠';
+  color: var(--warn);
+}
+.cmd[hidden] {
+  display: none;
+}
+.pair {
+  font: 9px var(--f-mono);
+  color: var(--muted);
+  margin: 4px 0 2px;
+}
+.pair .arrow {
+  color: var(--c);
+}
+@media (max-width: 760px) {
+  .grid {
+    grid-template-columns: minmax(0, 1fr);
+  }
+  .cmd .d {
+    max-width: 50%;
+  }
+  .naming {
+    grid-template-columns: minmax(0, 1fr);
+  }
+  .ntab .ex {
+    white-space: normal;
+    word-break: break-all;
+  }
+}

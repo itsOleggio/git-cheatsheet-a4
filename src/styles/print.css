@@ -1,0 +1,26 @@
+@media print {
+  @page {
+    size: A4;
+    margin: 0;
+  }
+  body {
+    padding: 0;
+    -webkit-print-color-adjust: exact;
+    print-color-adjust: exact;
+  }
+  .tools,
+  .tip,
+  .toast {
+    display: none !important;
+  }
+  .sheet {
+    border: 0;
+    width: 210mm;
+    height: 297mm;
+    max-width: none;
+    break-after: page;
+  }
+  .sheet + .sheet {
+    margin-top: 0;
+  }
+}

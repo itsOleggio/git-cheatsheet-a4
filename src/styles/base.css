@@ -1,0 +1,139 @@
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+html {
+  -webkit-text-size-adjust: 100%;
+}
+body {
+  margin: 0;
+  font:
+    14px system-ui,
+    -apple-system,
+    'Segoe UI',
+    Roboto,
+    sans-serif;
+}
+img {
+  max-width: 100%;
+}
+[hidden] {
+  display: none !important;
+}
+body {
+  background: var(--bg);
+  color: var(--fg);
+  font-family: var(--f-body);
+  padding-left: max(16px, env(safe-area-inset-left, 0px));
+  padding-right: max(16px, env(safe-area-inset-right, 0px));
+  padding-block: 20px 40px;
+}
+.tools {
+  max-width: 794px;
+  margin: 0 auto 12px;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  align-items: center;
+}
+.tools {
+  --h: 36px;
+}
+.tools input {
+  flex: 1 1 180px;
+  min-width: 0;
+  height: var(--h);
+  background: var(--sheet);
+  border: 1px solid var(--line);
+  color: var(--fg);
+  font: 13px var(--f-mono);
+  padding: 0 12px;
+  border-radius: 6px;
+  margin: 0;
+}
+.tools .seg {
+  height: var(--h);
+}
+.tools .seg button {
+  height: 100%;
+  display: flex;
+  align-items: center;
+}
+.tools input:focus-visible,
+.seg button:focus-visible,
+.cmd:focus-visible {
+  outline: 2px solid var(--rel);
+  outline-offset: 2px;
+}
+.seg {
+  display: flex;
+  border: 1px solid var(--line);
+  border-radius: 6px;
+  overflow: hidden;
+}
+.seg button {
+  background: var(--sheet);
+  color: var(--muted);
+  border: 0;
+  font: 600 11px var(--f-mono);
+  padding: 8px 12px;
+  cursor: pointer;
+  letter-spacing: 0.04em;
+}
+.seg button[aria-pressed='true'] {
+  background: var(--fg);
+  color: var(--bg);
+}
+.tip .tl {
+  font: 600 10px var(--f-mono);
+  color: var(--muted);
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  margin-bottom: 6px;
+}
+.tip {
+  position: fixed;
+  z-index: 20;
+  max-width: 360px;
+  background: #000;
+  border: 1px solid var(--line);
+  border-radius: 6px;
+  padding: 10px 12px;
+  font-size: 12px;
+  line-height: 1.45;
+  pointer-events: none;
+  box-shadow: 0 8px 30px #0008;
+}
+.tip code {
+  font: 600 12px var(--f-mono);
+  color: var(--rel);
+  display: block;
+  margin-bottom: 4px;
+}
+.tip .w {
+  color: var(--warn);
+  margin-top: 4px;
+}
+.tip .ex {
+  font: 11px var(--f-mono);
+  color: var(--muted);
+  margin-top: 6px;
+}
+.toast {
+  position: fixed;
+  bottom: calc(20px + env(safe-area-inset-bottom, 0px));
+  left: 50%;
+  transform: translateX(-50%);
+  background: var(--fg);
+  color: var(--bg);
+  font: 600 12px var(--f-mono);
+  padding: 8px 14px;
+  border-radius: 6px;
+  z-index: 30;
+}
+@media (prefers-reduced-motion: reduce) {
+  * {
+    transition: none !important;
+  }
+}

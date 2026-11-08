@@ -4,7 +4,7 @@
 
 ![Скриншот](docs/screenshot.png)
 
-**[Демо](https://itsoleggio.github.io/git-cheatsheet-a4/)** · [Лист 2: коммиты](docs/screenshot-commits.png)
+**[Демо](https://itsoleggio.github.io/git-cheatsheet-a4/)** · [Макет](docs/screenshot-commits.png)
 
 ## Возможности
 - **71 команда Git в 9 разделах**, с пометками NEW (Git 2.23+) и OLD и парами «старая → новая»: `checkout` → `switch` / `restore`, `stash save` → `stash push`, `--force` → `--force-with-lease`
@@ -15,45 +15,65 @@
 - **Печать на A4**: два листа ровно по формату, каждый на своей странице, с тёмным фоном
 
 ## Стек
-HTML · CSS (custom properties, grid, `@page`) · JavaScript без фреймворков · SVG · Google Fonts (Unbounded, IBM Plex Sans, JetBrains Mono)
+Vite · TypeScript (strict) · ванильный DOM без фреймворков · SVG · CSS-файлы по блокам (custom properties, grid, `@page`) · Vitest + jsdom · Playwright · ESLint + Prettier · GitHub Actions → Pages · Google Fonts (Unbounded, IBM Plex Sans, JetBrains Mono)
 
 ## Архитектура
 ```
-.
-├── index.html                  # вся шпаргалка: разметка, стили и скрипт
-├── docs/
-│   ├── screenshot.png          # лист 1: команды
-│   └── screenshot-commits.png  # лист 2: коммиты
-├── README.md
-└── LICENSE
-```
-Внутри `index.html`:
-```
-<style>          # токены цветов и шрифтов в :root, сетка листа, @media print
-<article #sheet> # лист 1: граф веток, 9 разделов команд, именование веток
-<article #sheet2># лист 2: формат коммита, git log --graph, типы, правила, CHANGELOG
-<script>
-  S     # данные: разделы и команды (текст, подпись, NEW/OLD, предупреждение)
-  LONG  # подробные описания для подсказок
-  ...   # отрисовка SVG-графов, подсказки, копирование, фильтр и поиск
+src/
+├── main.ts              # точка входа: собирает листы и вешает обработчики
+├── data/
+│   ├── commands.ts      # разделы и команды, цвета веток
+│   ├── descriptions.ts  # подробные подсказки
+│   ├── branches.ts      # типы веток для блока «Именование веток»
+│   └── commits.ts       # история для графа, типы коммитов, примеры «плохо → хорошо»
+├── model/
+│   └── types.ts         # Command, Section, CommitRow, CommitType и другие типы
+├── templates/
+│   ├── sheet1.html      # статичная разметка листа 1
+│   └── sheet2.html      # статичная разметка листа 2
+├── render/
+│   ├── sheet1.ts        # шаблон листа 1 и таблица веток
+│   ├── sheet2.ts        # шаблон листа 2, типы коммитов и примеры
+│   ├── branchGraph.ts   # SVG-граф листа 1 и подсветка веток
+│   ├── commitLog.ts     # SVG git log --graph листа 2
+│   ├── sections.ts      # разделы команд
+│   └── titleAlign.ts    # выравнивание «cheat» по линии main
+├── features/
+│   ├── tooltip.ts       # подробная подсказка при наведении
+│   ├── clipboard.ts     # копирование, тост и запасной вариант с выделением
+│   └── filter.ts        # фильтр NEW/OLD, поиск, запоминание в localStorage
+├── utils/
+│   └── dom.ts           # el(), svg(), byId()
+└── styles/
+    ├── tokens.css       # цвета и шрифты в :root
+    ├── base.css         # сброс, панель поиска, подсказка, тост
+    ├── sheet.css        # общий каркас листа
+    ├── sheet1.css
+    ├── sheet2.css
+    └── print.css
 ```
 Ключевые решения:
-- **Почему один HTML-файл без сборки**: шпаргалку открывают и печатают, а не разрабатывают. Один файл работает с диска, без сервера и `npm install`, и сразу публикуется на GitHub Pages.
-- **Как устроены данные**: команды и описания лежат в JS-массивах `S` и `LONG`, разметка разделов и SVG-граф строятся из них. Чтобы добавить команду, достаточно дописать одну строку в `S` и описание в `LONG`.
-- **Как держится формат A4**: у листа `aspect-ratio: 210/297` и ширина 794 px (A4 при 96 dpi), для печати `@page { size: A4; margin: 0 }` и разрыв страницы после каждого листа.
+- **Почему без фреймворка**: страница статичная, состояния почти нет: фильтр и строка поиска. Фреймворк увеличил бы бандл, а упростил бы мало. В бандл попадает только свой код.
+- **Почему данные отдельно от отрисовки**: тексты проверяются и правятся независимо от SVG и разметки. Чтобы добавить команду, достаточно дописать её в `commands.ts` и `descriptions.ts`, а тесты проверят, что описание на месте и дублей нет.
+- **Как держится формат A4**: ширина листа 794 px (A4 при 96 dpi) и `aspect-ratio: 210/297`. В печати `@page { size: A4; margin: 0 }` и размер `210mm × 297mm` дают ровно по одному листу на страницу. На экране контент может сделать лист немного выше, поэтому точный формат задаётся именно в печати. `npm run test:visual` сравнивает оба листа с эталонными скриншотами.
 
 ## Запуск
 ```bash
 git clone https://github.com/itsOleggio/git-cheatsheet-a4.git
 cd git-cheatsheet-a4
-open index.html        # macOS; в Windows: start index.html, в Linux: xdg-open index.html
+npm install
+npm run dev
 ```
 
-| Команда | Что делает |
+| Скрипт | Что делает |
 |---|---|
-| `open index.html` | открыть шпаргалку в браузере |
-| `npx serve .` | локальный сервер, если браузер ограничивает работу с файлами |
-| `Ctrl+P` / `Cmd+P` | печать или PDF: формат A4, поля «Нет», включить «Фоновая графика» |
+| `npm run dev` | dev-сервер Vite |
+| `npm run build` | проверка типов и сборка в `dist/` |
+| `npm run preview` | просмотр сборки |
+| `npm run lint` | ESLint |
+| `npm run format` | Prettier |
+| `npm test` | Vitest |
+| `npm run test:visual` | сравнение скриншотов с эталоном; нужен `npx playwright install chromium` |
 
 ## Что бы я улучшил
 - Английская версия с переключателем языка

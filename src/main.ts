@@ -1,5 +1,6 @@
 /* eslint-disable */
 // @ts-nocheck
+import {createCommandLookup,renderSections} from './render/sections';
 import {initTitleAlign} from './render/titleAlign';
 import {svg as el} from './utils/dom';
 import {renderBranchGraph} from './render/branchGraph';
@@ -17,28 +18,15 @@ const graph=renderBranchGraph(G);
 
 initTitleAlign({title:document.getElementById("ttl"),middleLine:document.getElementById("ttl-mid"),graph:G});
 
-// Sections
 const grid=document.getElementById("grid");
-S.forEach(s=>{
-  const sec=document.createElement("section");sec.className="sec";sec.style.setProperty("--c",LANES[s.lane]);sec.dataset.l=s.lane;
-  sec.innerHTML=`<h2>${s.title}</h2>`;
-  s.commands.forEach(c=>{
-    const b=document.createElement("button");b.className="cmd"+(c.warning?" danger":"");b.dataset.t=c.era||"";
-    b.innerHTML=`<code></code>${c.era?`<span class="badge ${c.era}">${c.era.toUpperCase()}</span>`:""}<span class="d"></span>`;
-    b.querySelector("code").textContent=c.command;b.querySelector(".d").textContent=c.label;b._c=c;b._sec=s;
-    sec.append(b);
-  });
-  if(s.pairs){s.pairs.forEach(([o,n])=>{const p=document.createElement("div");p.className="pair";p.innerHTML=`<span></span> <span class="arrow">→</span> <span style="color:var(--fg)"></span>`;p.children[0].textContent=o;p.children[2].textContent=n;sec.append(p)})}
-  sec.addEventListener("mouseenter",()=>{G.classList.add("dim");G.querySelector(`[data-l="${s.lane}"]`).classList.add("on")});
-  sec.addEventListener("mouseleave",()=>{G.classList.remove("dim");G.querySelectorAll(".on").forEach(e=>e.classList.remove("on"))});
-  grid.append(sec);
-});
+const rendered=renderSections(grid,S,graph);
+const lookup=createCommandLookup(rendered);
 
 // Tooltip
 const tip=document.getElementById("tip");
 grid.addEventListener("mousemove",e=>{
   const b=e.target.closest(".cmd");if(!b){tip.hidden=true;return}
-  const c=b._c;tip.innerHTML="";
+  const c=lookup(b).command;tip.innerHTML="";
   const code=document.createElement("code");code.textContent=c.command;tip.append(code);
   const h=document.createElement("div");h.className="tl";h.textContent=c.label[0].toUpperCase()+c.label.slice(1)+(c.era==="new"?" · новый способ":c.era==="old"?" · старый способ":"");tip.append(h);
   const d=document.createElement("div");d.textContent=LONG[c.command]||c.hint||"";tip.append(d);
@@ -55,7 +43,7 @@ grid.addEventListener("mouseleave",()=>tip.hidden=true);
 const toast=document.getElementById("toast");let tt;
 const show=m=>{toast.textContent=m;toast.hidden=false;clearTimeout(tt);tt=setTimeout(()=>toast.hidden=true,1400)};
 grid.addEventListener("click",e=>{
-  const b=e.target.closest(".cmd");if(!b)return;const text=b._c.command;
+  const b=e.target.closest(".cmd");if(!b)return;const text=lookup(b).command.command;
   const fallback=()=>{const r=document.createRange();r.selectNodeContents(b.querySelector("code"));const s=getSelection();s.removeAllRanges();s.addRange(r);show("Выделено — нажми Ctrl+C")};
   try{navigator.clipboard.writeText(text).then(()=>show("Скопировано: "+text),fallback)}catch(_){fallback()}
 });
@@ -136,7 +124,7 @@ function apply(){
   document.querySelectorAll(".sec").forEach(sec=>{
     let any=false;
     sec.querySelectorAll(".cmd").forEach(b=>{
-      const c=b._c,okF=F==="all"||c.era===F,okS=!s||(c.command+" "+c.label+" "+(c.hint||"")).toLowerCase().includes(s);
+      const c=lookup(b).command,okF=F==="all"||c.era===F,okS=!s||(c.command+" "+c.label+" "+(c.hint||"")).toLowerCase().includes(s);
       b.hidden=!(okF&&okS);if(!b.hidden)any=true;
     });
     sec.querySelectorAll(".pair").forEach(p=>p.hidden=F!=="all"||!!s);

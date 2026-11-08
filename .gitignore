@@ -17,3 +17,15 @@ dist/
 coverage/
 test-results/
 playwright-report/
+
+# Переменные окружения и локальные настройки
+.env
+.env.*
+*.local
+
+# Логи и кэши
+*.log
+.eslintcache
+*.tsbuildinfo
+.vite/
+blob-report/

@@ -1,180 +1,13 @@
 /* eslint-disable */
 // @ts-nocheck
+import {LANE_COLORS as LANES,SECTIONS as S} from './data/commands';
+import {DESCRIPTIONS as LONG} from './data/descriptions';
 import './styles/tokens.css';
 import './styles/base.css';
 import './styles/sheet.css';
 import './styles/sheet1.css';
 import './styles/sheet2.css';
 import './styles/print.css';
-
-const LANES={main:"var(--main)",feat:"var(--feat)",fix:"var(--fix)",rel:"var(--rel)"};
-// c: command, d: short label, t: new/old, x: example/long hint, w: warning, p: pair index
-const S=[
- {h:"Настройка",l:"main",cmds:[
-  {c:'git config --global user.name "Имя"',d:"имя автора"},
-  {c:'git config --global user.email "a@b.c"',d:"почта автора"},
-  {c:"git config --global init.defaultBranch main",d:"ветка по умолч."},
-  {c:"git init",d:"новый репозиторий"},
-  {c:"git clone <url>",d:"скопировать репо"},
-  {c:"git clone --depth 1 <url>",d:"только последний",x:"Shallow clone: без истории, быстро для CI"},
-  {c:"git clone --filter=blob:none <url>",d:"partial clone",t:"new",x:"Файлы подкачиваются по требованию — быстро для больших репо"},
- ]},
- {h:"Изменения",l:"main",cmds:[
-  {c:"git status -sb",d:"краткий статус"},
-  {c:"git add <file>",d:"в индекс"},
-  {c:"git add -p",d:"по кусочкам",x:"Интерактивно выбираешь, какие ханки добавить"},
-  {c:'git commit -m "msg"',d:"коммит"},
-  {c:"git commit --amend",d:"поправить последний",w:"Меняет хэш — не делай после push"},
-  {c:"git diff",d:"рабочая vs индекс"},
-  {c:"git diff --staged",d:"индекс vs HEAD"},
-  {c:"git rm --cached <file>",d:"убрать из git"},
- ]},
- {h:"Ветки",l:"feat",pairs:[["git checkout <br>","git switch <br>"],["git checkout -b <br>","git switch -c <br>"]],cmds:[
-  {c:"git switch <branch>",d:"перейти",t:"new"},
-  {c:"git checkout <branch>",d:"перейти",t:"old",x:"Перегружена смыслами — используй switch/restore"},
-  {c:"git switch -c <new>",d:"создать+перейти",t:"new"},
-  {c:"git checkout -b <new>",d:"создать+перейти",t:"old"},
-  {c:"git switch -",d:"предыдущая ветка",t:"new"},
-  {c:"git branch -vv",d:"список + upstream"},
-  {c:"git branch -m <new>",d:"переименовать"},
-  {c:"git branch -d <br>",d:"удалить (смерж.)"},
-  {c:"git branch -D <br>",d:"удалить силой",w:"Несмерженные коммиты останутся только в reflog"},
- ]},
- {h:"Отмена",l:"fix",pairs:[["git checkout -- f","git restore f"],["git reset HEAD f","git restore --staged f"]],cmds:[
-  {c:"git restore <file>",d:"сбросить файл",t:"new",w:"Несохранённые правки файла пропадут"},
-  {c:"git checkout -- <file>",d:"сбросить файл",t:"old",w:"Несохранённые правки файла пропадут"},
-  {c:"git restore --staged <file>",d:"из индекса",t:"new"},
-  {c:"git reset HEAD <file>",d:"из индекса",t:"old"},
-  {c:"git restore -s HEAD~1 <file>",d:"версия из коммита",t:"new"},
-  {c:"git reset --soft HEAD~1",d:"откат, правки в индексе"},
-  {c:"git reset --mixed HEAD~1",d:"откат, правки в файлах"},
-  {c:"git reset --hard HEAD~1",d:"откат начисто",w:"Удаляет коммит и все правки"},
-  {c:"git revert <sha>",d:"анти-коммит",x:"Безопасно для общих веток — история не переписывается"},
-  {c:"git clean -fd",d:"удалить untracked",w:"Удаляет неотслеживаемые файлы безвозвратно. Сначала git clean -n"},
- ]},
- {h:"Слияние",l:"feat",cmds:[
-  {c:"git merge <br>",d:"влить ветку"},
-  {c:"git merge --no-ff <br>",d:"всегда merge-коммит"},
-  {c:"git merge --squash <br>",d:"одним коммитом"},
-  {c:"git rebase main",d:"перенести на main",w:"Переписывает историю ветки"},
-  {c:"git rebase -i HEAD~3",d:"squash / reword",x:"pick, squash, fixup, reword, drop"},
-  {c:"git rebase --update-refs",d:"двигать стек веток",t:"new",x:"Git 2.38+: обновляет все ветки стека при rebase"},
-  {c:"git cherry-pick <sha>",d:"взять коммит"},
-  {c:"git merge --abort",d:"отменить merge"},
- ]},
- {h:"Удалённые",l:"rel",cmds:[
-  {c:"git remote -v",d:"список remote"},
-  {c:"git fetch --prune",d:"скачать, без слияния"},
-  {c:"git pull --rebase",d:"забрать + rebase"},
-  {c:"git push -u origin <br>",d:"первый push"},
-  {c:"git push --force-with-lease",d:"безопасный force",t:"new",x:"Не затрёт чужие коммиты, в отличие от --force"},
-  {c:"git push --force",d:"перезаписать",t:"old",w:"Может затереть чужую работу на сервере"},
-  {c:"git push origin --delete <br>",d:"удалить ветку"},
-  {c:"git push --tags",d:"отправить теги"},
- ]},
- {h:"Stash",l:"rel",cmds:[
-  {c:'git stash push -m "wip"',d:"спрятать",t:"new"},
-  {c:"git stash save \"wip\"",d:"спрятать",t:"old",x:"Устарело с 2.16 — используй stash push"},
-  {c:"git stash -u",d:"+ untracked"},
-  {c:"git stash list",d:"список"},
-  {c:"git stash pop",d:"достать и удалить"},
-  {c:"git stash apply stash@{1}",d:"достать копию"},
- ]},
- {h:"История",l:"main",cmds:[
-  {c:"git log --oneline --graph --all",d:"граф веток"},
-  {c:"git log -p <file>",d:"история файла"},
-  {c:"git show <sha>",d:"что в коммите"},
-  {c:"git blame -L 10,20 <f>",d:"кто писал строки"},
-  {c:"git reflog",d:"найти потерянное",x:"Все перемещения HEAD — тут найдёшь «потерянное»"},
-  {c:"git bisect start",d:"поиск бага"},
-  {c:"git grep \"TODO\"",d:"поиск в коде"},
-  {c:"git tag -a v1.0 -m \"…\"",d:"тег релиза"},
- ]},
- {h:"Современный Git",l:"fix",cmds:[
-  {c:"git worktree add ../hf hotfix",d:"2-я рабочая папка",t:"new",x:"Две ветки открыты одновременно, без stash"},
-  {c:"git sparse-checkout set src/",d:"часть монорепо",t:"new"},
-  {c:"git maintenance start",d:"фоновая оптимизация",t:"new"},
-  {c:"git switch --detach <sha>",d:"detached HEAD",t:"new"},
-  {c:"git range-diff A...B",d:"сравнить версии PR",t:"new"},
-  {c:"git commit --fixup=<sha>",d:"фикс к коммиту",x:"Потом git rebase -i --autosquash"},
-  {c:"git config rerere.enabled true",d:"помнить конфликты"},
- ]},
-];
-
-// Detailed descriptions for tooltips
-const LONG={
-'git config --global user.name "Имя"':"Задаёт имя, которое попадёт в поле Author каждого коммита. Флаг --global пишет в ~/.gitconfig для всех репозиториев; без него — только в текущий (.git/config).",
-'git config --global user.email "a@b.c"':"Задаёт email автора коммитов. Должен совпадать с почтой в GitHub/GitLab, иначе коммиты не привяжутся к аккаунту.",
-"git config --global init.defaultBranch main":"Меняет имя первой ветки при git init с master на main. Работает с Git 2.28+.",
-"git init":"Создаёт пустой репозиторий в текущей папке: появляется скрытая папка .git с историей и настройками. Файлы при этом ещё не отслеживаются.",
-"git clone <url>":"Скачивает удалённый репозиторий целиком: всю историю, все ветки, и создаёт remote с именем origin. Сразу переключается на ветку по умолчанию.",
-"git clone --depth 1 <url>":"Shallow clone: скачивает только последний коммит без истории. Быстро, подходит для CI и сборки. Минус: log, blame и rebase по старой истории не работают, пока не сделаешь git fetch --unshallow.",
-"git clone --filter=blob:none <url>":"Partial clone (Git 2.19+): скачивает всю историю коммитов, а содержимое файлов скачивает, только когда оно нужно. Для больших репозиториев: история на месте, клонирование быстрое.",
-"git status -sb":"Показывает состояние рабочей папки в кратком виде: -s — короткий формат (M изменён, A добавлен, ?? не отслеживается), -b — текущая ветка и насколько она впереди/позади upstream.",
-"git add <file>":"Добавляет текущее состояние файла в индекс (staging area), чтобы потом закоммитить. git add . добавит всё в текущей папке.",
-"git add -p":"Интерактивное добавление по ханкам (кускам изменений). На каждый кусок отвечаешь y/n/s (разделить)/e (редактировать). Так правки в одном файле можно разбить на несколько коммитов.",
-'git commit -m "msg"':"Создаёт коммит из того, что лежит в индексе, с сообщением msg. Добавь -a, чтобы автоматически закоммитить все изменённые отслеживаемые файлы без git add.",
-"git commit --amend":"Заменяет последний коммит новым: добавляет туда то, что в индексе, и даёт поправить сообщение. Создаётся новый хэш, поэтому после push потребуется force push.",
-"git diff":"Показывает изменения в рабочей папке, которые ещё не добавлены в индекс.",
-"git diff --staged":"Показывает, что уже добавлено в индекс и попадёт в следующий коммит (разница между индексом и HEAD). Синоним — --cached.",
-"git rm --cached <file>":"Перестаёт отслеживать файл, но оставляет его на диске. Пример: случайно закоммитили .env или node_modules: убираешь из git и добавляешь в .gitignore.",
-"git switch <branch>":"Переключает на существующую ветку (Git 2.23+). Работает только с ветками, в отличие от checkout, который делает и многое другое. Если незакоммиченные правки конфликтуют с веткой, переключения не будет.",
-"git checkout <branch>":"Старый способ переключиться на ветку. Проблема checkout в том, что он делает слишком многое: переключает ветки, восстанавливает файлы, отсоединяет HEAD. Ошибка в аргументе может молча перезаписать файл.",
-"git switch -c <new>":"Создаёт новую ветку от текущего коммита и сразу переключается на неё. Можно указать точку старта: git switch -c feat origin/main.",
-"git checkout -b <new>":"Старый эквивалент switch -c: создаёт ветку и переключается на неё. До сих пор работает и встречается во всех туториалах.",
-"git switch -":"Переключает на предыдущую ветку, как cd - в терминале. Помогает переключаться туда-обратно между двумя ветками.",
-"git branch -vv":"Список локальных веток с последним коммитом и привязкой к удалённой ветке ([origin/main: ahead 2, behind 1]). Видно, какие ветки отстали или ушли вперёд.",
-"git branch -m <new>":"Переименовывает текущую ветку. Для другой ветки: git branch -m old new. На сервере старое имя останется: запушь новое и удали старое.",
-"git branch -d <br>":"Удаляет локальную ветку, только если она уже влита в текущую или в свой upstream. Защита от потери коммитов.",
-"git branch -D <br>":"Принудительно удаляет ветку, даже если её коммиты никуда не влиты. Коммиты исчезают не сразу: их ещё можно найти через git reflog в течение ~90 дней.",
-"git restore <file>":"Возвращает файл в рабочей папке к состоянию из индекса (Git 2.23+). Все несохранённые правки в этом файле пропадут без возможности восстановления.",
-"git checkout -- <file>":"Старый способ откатить файл к версии из индекса. Двойной дефис отделяет имя файла от имени ветки. Без него при совпадении имён можно случайно переключить ветку.",
-"git restore --staged <file>":"Убирает файл из индекса (unstage), но правки на диске сохраняются. Ничего не теряется.",
-"git reset HEAD <file>":"Старый способ убрать файл из индекса. Делает то же, что restore --staged. Но reset с другими флагами стирает изменения, поэтому для этой задачи лучше restore.",
-"git restore -s HEAD~1 <file>":"Достаёт версию файла из указанного коммита (-s = --source) и кладёт в рабочую папку. HEAD~1 — предыдущий коммит, можно указать любой хэш или ветку.",
-"git reset --soft HEAD~1":"Отменяет последний коммит, но все его изменения остаются в индексе и готовы к новому коммиту. Так можно переделать коммит или объединить несколько в один.",
-"git reset --mixed HEAD~1":"Режим по умолчанию: отменяет коммит, изменения остаются в файлах, но убраны из индекса. Можно заново выбрать, что и как коммитить.",
-"git reset --hard HEAD~1":"Отменяет коммит и полностью стирает его изменения из индекса и рабочей папки. Незакоммиченные правки пропадут навсегда; сам коммит можно вернуть через reflog.",
-"git revert <sha>":"Создаёт новый коммит, который делает обратное указанному. История не переписывается, поэтому так отменяют уже запушенный коммит в общей ветке.",
-"git clean -fd":"Удаляет все неотслеживаемые файлы (-f) и папки (-d). Сначала запусти git clean -n: покажет, что будет удалено. Добавь -x, чтобы удалить и игнорируемые файлы.",
-"git merge <br>":"Вливает указанную ветку в текущую. Если текущая ветка не ушла вперёд, делает fast-forward (просто двигает указатель), иначе создаёт merge-коммит с двумя родителями.",
-"git merge --no-ff <br>":"Всегда создаёт merge-коммит, даже если возможен fast-forward. В истории остаётся видно, что была отдельная фича-ветка.",
-"git merge --squash <br>":"Собирает все изменения ветки в индекс одним куском, не делая коммит. Дальше делаешь git commit, и вся фича становится одним коммитом.",
-"git rebase main":"Переносит коммиты текущей ветки поверх свежего main, как будто ты начал работу только что. История получается линейной. Все хэши переносимых коммитов меняются.",
-"git rebase -i HEAD~3":"Интерактивный rebase последних 3 коммитов. В редакторе для каждого выбираешь: pick — оставить, reword — сменить сообщение, squash/fixup — склеить с предыдущим, drop — удалить, можно менять порядок строк.",
-"git rebase --update-refs":"Git 2.38+. При rebase стека веток (feat-1 → feat-2 → feat-3) автоматически двигает все промежуточные ветки, а не только текущую. Можно включить навсегда: rebase.updateRefs true.",
-"git cherry-pick <sha>":"Копирует один конкретный коммит из другой ветки в текущую как новый коммит. Например, чтобы перенести багфикс в релизную ветку без остальных изменений.",
-"git merge --abort":"Отменяет слияние, которое остановилось на конфликтах, и возвращает всё как было до merge. Аналог для rebase — git rebase --abort.",
-"git remote -v":"Показывает подключённые удалённые репозитории и их адреса для fetch и push. Добавить новый: git remote add upstream <url>.",
-"git fetch --prune":"Скачивает новые коммиты и ветки с сервера, но не трогает твои локальные ветки. --prune удаляет локальные ссылки на ветки, которых на сервере уже нет.",
-"git pull --rebase":"Делает fetch, а потом переносит твои локальные коммиты поверх полученных вместо merge-коммита. История остаётся линейной. Включить по умолчанию: git config pull.rebase true.",
-"git push -u origin <br>":"Отправляет ветку на сервер и запоминает связь (upstream). После этого достаточно писать просто git push и git pull.",
-"git push --force-with-lease":"Перезаписывает ветку на сервере, но только если там нет коммитов, которых ты не видел при последнем fetch. Нужен после rebase или amend, при этом защищает от затирания работы коллег.",
-"git push --force":"Перезаписывает ветку на сервере твоей версией без проверок. Если кто-то успел запушить свои коммиты, они пропадут. Используй --force-with-lease.",
-"git push origin --delete <br>":"Удаляет ветку на сервере. Локальная ветка остаётся, её удаляй отдельно через git branch -d.",
-"git push --tags":"Отправляет на сервер все локальные теги: обычный push их не отправляет. Один тег: git push origin v1.0.",
-'git stash push -m "wip"':"Прячет незакоммиченные изменения во временное хранилище и очищает рабочую папку. -m задаёт подпись. Можно спрятать только часть: git stash push -- path/file.",
-'git stash save "wip"':"Устаревший синтаксис (deprecated с Git 2.16). Не умеет прятать отдельные файлы. Замени на git stash push -m.",
-"git stash -u":"Прячет вместе с неотслеживаемыми (новыми) файлами. Без -u новые файлы остаются в рабочей папке.",
-"git stash list":"Список всех спрятанных наборов: stash@{0} — самый свежий. Посмотреть содержимое: git stash show -p stash@{0}.",
-"git stash pop":"Возвращает последний stash в рабочую папку и удаляет его из списка. При конфликте stash не удаляется: разреши конфликт и сделай git stash drop.",
-"git stash apply stash@{1}":"Применяет указанный stash, но оставляет его в списке. Пригодится, если те же изменения нужны в нескольких ветках.",
-"git log --oneline --graph --all":"Компактная история всех веток в виде ASCII-графа: каждый коммит одной строкой. Добавь --decorate, чтобы видеть ветки и теги. Алиас: git config --global alias.lg 'log --oneline --graph --all'.",
-"git log -p <file>":"История конкретного файла с полным diff каждого изменения. Добавь --follow, чтобы отслеживать файл через переименования.",
-"git show <sha>":"Показывает метаданные коммита (автор, дата, сообщение) и полный diff. Без аргумента — последний коммит. git show HEAD:path/file выведет файл как он был в коммите.",
-"git blame -L 10,20 <f>":"Для каждой строки 10–20 показывает, в каком коммите и кем она была изменена последний раз. -w игнорирует изменения пробелов, -C ищет перенос кода из других файлов.",
-"git reflog":"Журнал всех перемещений HEAD: коммиты, переключения, reset, rebase. Через него находят потерянные коммиты: нашёл хэш до неудачного reset — выполнил git reset --hard <sha>. Хранится ~90 дней, только локально.",
-"git bisect start":"Бинарный поиск коммита, который внёс баг. Отмечаешь git bisect bad (сломано) и git bisect good <sha> (работало). Git переключает на середину, ты проверяешь и отвечаешь, пока не найдётся виновник. Завершить: git bisect reset.",
-'git grep "TODO"':"Ищет текст по отслеживаемым файлам. Быстрее обычного grep и игнорирует node_modules. -n — номера строк, можно искать в другом коммите: git grep TODO v1.0.",
-'git tag -a v1.0 -m "…"':"Создаёт аннотированный тег с автором, датой и сообщением. Им отмечают релизы. Без -a создаётся лёгкий тег, просто указатель.",
-"git worktree add ../hf hotfix":"Создаёт вторую рабочую папку ../hf с веткой hotfix, привязанную к тому же репозиторию. Можно чинить срочный баг, не трогая и не прятая текущую работу. Удалить: git worktree remove ../hf.",
-"git sparse-checkout set src/":"Оставляет в рабочей папке только указанные директории, остальное не выкачивается на диск. Применяют в монорепозиториях. Вернуть всё: git sparse-checkout disable.",
-"git maintenance start":"Регистрирует репозиторий для фоновых оптимизаций по расписанию: prefetch, commit-graph, упаковка объектов. Ускоряет fetch, log и status в больших репозиториях.",
-"git switch --detach <sha>":"Переходит на конкретный коммит в режиме detached HEAD (без ветки). Подходит, чтобы посмотреть старую версию. Новые коммиты здесь легко потерять, поэтому создай ветку через git switch -c.",
-"git range-diff A...B":"Сравнивает две версии серии коммитов, например PR до и после rebase. Показывает, какие коммиты изменились и как. Нужно при ревью после force-push.",
-"git commit --fixup=<sha>":"Создаёт коммит с пометкой fixup! для указанного коммита. Потом git rebase -i --autosquash сам поставит его в нужное место и склеит. Так исправляют коммиты из середины ветки.",
-"git config rerere.enabled true":"Rerere (reuse recorded resolution) запоминает, как ты разрешил конфликт, и в следующий раз применит то же решение автоматически. Экономит время при частых rebase длинных веток.",
-};
 
 // Graph
 const G=document.getElementById("graph"),NS="http://www.w3.org/2000/svg";
@@ -214,16 +47,16 @@ addEventListener("resize",alignTitle);
 // Sections
 const grid=document.getElementById("grid");
 S.forEach(s=>{
-  const sec=document.createElement("section");sec.className="sec";sec.style.setProperty("--c",LANES[s.l]);sec.dataset.l=s.l;
-  sec.innerHTML=`<h2>${s.h}</h2>`;
-  s.cmds.forEach(c=>{
-    const b=document.createElement("button");b.className="cmd"+(c.w?" danger":"");b.dataset.t=c.t||"";
-    b.innerHTML=`<code></code>${c.t?`<span class="badge ${c.t}">${c.t.toUpperCase()}</span>`:""}<span class="d"></span>`;
-    b.querySelector("code").textContent=c.c;b.querySelector(".d").textContent=c.d;b._c=c;b._sec=s;
+  const sec=document.createElement("section");sec.className="sec";sec.style.setProperty("--c",LANES[s.lane]);sec.dataset.l=s.lane;
+  sec.innerHTML=`<h2>${s.title}</h2>`;
+  s.commands.forEach(c=>{
+    const b=document.createElement("button");b.className="cmd"+(c.warning?" danger":"");b.dataset.t=c.era||"";
+    b.innerHTML=`<code></code>${c.era?`<span class="badge ${c.era}">${c.era.toUpperCase()}</span>`:""}<span class="d"></span>`;
+    b.querySelector("code").textContent=c.command;b.querySelector(".d").textContent=c.label;b._c=c;b._sec=s;
     sec.append(b);
   });
   if(s.pairs){s.pairs.forEach(([o,n])=>{const p=document.createElement("div");p.className="pair";p.innerHTML=`<span></span> <span class="arrow">→</span> <span style="color:var(--fg)"></span>`;p.children[0].textContent=o;p.children[2].textContent=n;sec.append(p)})}
-  sec.addEventListener("mouseenter",()=>{G.classList.add("dim");G.querySelector(`[data-l="${s.l}"]`).classList.add("on")});
+  sec.addEventListener("mouseenter",()=>{G.classList.add("dim");G.querySelector(`[data-l="${s.lane}"]`).classList.add("on")});
   sec.addEventListener("mouseleave",()=>{G.classList.remove("dim");G.querySelectorAll(".on").forEach(e=>e.classList.remove("on"))});
   grid.append(sec);
 });
@@ -233,11 +66,11 @@ const tip=document.getElementById("tip");
 grid.addEventListener("mousemove",e=>{
   const b=e.target.closest(".cmd");if(!b){tip.hidden=true;return}
   const c=b._c;tip.innerHTML="";
-  const code=document.createElement("code");code.textContent=c.c;tip.append(code);
-  const h=document.createElement("div");h.className="tl";h.textContent=c.d[0].toUpperCase()+c.d.slice(1)+(c.t==="new"?" · новый способ":c.t==="old"?" · старый способ":"");tip.append(h);
-  const d=document.createElement("div");d.textContent=LONG[c.c]||c.x||"";tip.append(d);
-  if(c.x&&LONG[c.c]){const x=document.createElement("div");x.className="ex";x.textContent="→ "+c.x;tip.append(x)}
-  if(c.w){const w=document.createElement("div");w.className="w";w.textContent="⚠ "+c.w;tip.append(w)}
+  const code=document.createElement("code");code.textContent=c.command;tip.append(code);
+  const h=document.createElement("div");h.className="tl";h.textContent=c.label[0].toUpperCase()+c.label.slice(1)+(c.era==="new"?" · новый способ":c.era==="old"?" · старый способ":"");tip.append(h);
+  const d=document.createElement("div");d.textContent=LONG[c.command]||c.hint||"";tip.append(d);
+  if(c.hint&&LONG[c.command]){const x=document.createElement("div");x.className="ex";x.textContent="→ "+c.hint;tip.append(x)}
+  if(c.warning){const w=document.createElement("div");w.className="w";w.textContent="⚠ "+c.warning;tip.append(w)}
   tip.hidden=false;
   const r=tip.getBoundingClientRect();let x=e.clientX+14,y=e.clientY+14;
   if(x+r.width>innerWidth-8)x=e.clientX-r.width-14;if(y+r.height>innerHeight-8)y=e.clientY-r.height-14;
@@ -249,7 +82,7 @@ grid.addEventListener("mouseleave",()=>tip.hidden=true);
 const toast=document.getElementById("toast");let tt;
 const show=m=>{toast.textContent=m;toast.hidden=false;clearTimeout(tt);tt=setTimeout(()=>toast.hidden=true,1400)};
 grid.addEventListener("click",e=>{
-  const b=e.target.closest(".cmd");if(!b)return;const text=b._c.c;
+  const b=e.target.closest(".cmd");if(!b)return;const text=b._c.command;
   const fallback=()=>{const r=document.createRange();r.selectNodeContents(b.querySelector("code"));const s=getSelection();s.removeAllRanges();s.addRange(r);show("Выделено — нажми Ctrl+C")};
   try{navigator.clipboard.writeText(text).then(()=>show("Скопировано: "+text),fallback)}catch(_){fallback()}
 });
@@ -330,7 +163,7 @@ function apply(){
   document.querySelectorAll(".sec").forEach(sec=>{
     let any=false;
     sec.querySelectorAll(".cmd").forEach(b=>{
-      const c=b._c,okF=F==="all"||c.t===F,okS=!s||(c.c+" "+c.d+" "+(c.x||"")).toLowerCase().includes(s);
+      const c=b._c,okF=F==="all"||c.era===F,okS=!s||(c.command+" "+c.label+" "+(c.hint||"")).toLowerCase().includes(s);
       b.hidden=!(okF&&okS);if(!b.hidden)any=true;
     });
     sec.querySelectorAll(".pair").forEach(p=>p.hidden=F!=="all"||!!s);

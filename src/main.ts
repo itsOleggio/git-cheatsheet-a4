@@ -5,9 +5,10 @@ import './styles/sheet1.css';
 import './styles/sheet2.css';
 import './styles/print.css';
 
-import { COMMIT_HISTORY } from './data/commits';
+import { COMMIT_HISTORY, COMMIT_EXAMPLES, COMMIT_TYPES } from './data/commits';
 import { SECTIONS } from './data/commands';
 import { DESCRIPTIONS } from './data/descriptions';
+import { BRANCH_TYPES } from './data/branches';
 import { initCopy } from './features/clipboard';
 import { initFilter } from './features/filter';
 import { initTooltip } from './features/tooltip';
@@ -19,8 +20,8 @@ import { renderSheet2 } from './render/sheet2';
 import { initTitleAlign } from './render/titleAlign';
 import { byId } from './utils/dom';
 
-renderSheet1(byId('sheet', HTMLElement));
-renderSheet2(byId('sheet2', HTMLElement));
+renderSheet1(byId('sheet', HTMLElement), BRANCH_TYPES);
+renderSheet2(byId('sheet2', HTMLElement), COMMIT_TYPES, COMMIT_EXAMPLES);
 
 const graphRoot = byId('graph', SVGSVGElement);
 const graph = renderBranchGraph(graphRoot);

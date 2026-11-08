@@ -1,4 +1,4 @@
-import type { CommitRow } from '../model/types';
+import type { CommitExample, CommitRow, CommitType } from '../model/types';
 
 export const COMMIT_TYPE_COLORS = {
   feat: 'var(--feat)',
@@ -37,3 +37,76 @@ export const COMMIT_HISTORY = [
   { lane: 'main', hash: 'a29d4f1', message: 'ci: cache npm dependencies in GitHub Actions' },
   { lane: 'main', hash: '1b7e0c3', message: 'chore: init project with Vite + React' },
 ] satisfies CommitRow[];
+
+export const COMMIT_TYPES = [
+  {
+    name: 'feat',
+    description: 'новая функциональность',
+    bump: 'MINOR',
+    color: 'var(--feat)',
+    bumpColor: 'var(--main)',
+  },
+  {
+    name: 'fix',
+    description: 'исправление бага',
+    bump: 'PATCH',
+    color: 'var(--fix)',
+    bumpColor: 'var(--rel)',
+  },
+  { name: 'refactor', description: 'код без смены поведения', bump: '—', color: '#2dd4bf' },
+  {
+    name: 'perf',
+    description: 'производительность',
+    bump: 'PATCH*',
+    color: '#facc15',
+    bumpColor: 'var(--rel)',
+  },
+  { name: 'test', description: 'тесты', bump: '—', color: '#a3e635' },
+  { name: 'docs', description: 'документация, README', bump: '—', color: 'var(--rel)' },
+  { name: 'style', description: 'форматирование кода', bump: '—', color: 'var(--muted)' },
+  { name: 'build', description: 'сборка, зависимости', bump: '—', color: 'var(--muted)' },
+  { name: 'ci', description: 'пайплайны CI/CD', bump: '—', color: 'var(--muted)' },
+  { name: 'chore', description: 'рутина, конфиги', bump: '—', color: 'var(--muted)' },
+  {
+    name: 'revert',
+    description: 'откат коммита',
+    bump: 'PATCH*',
+    color: 'var(--warn)',
+    bumpColor: 'var(--rel)',
+  },
+  {
+    name: 'type!',
+    description: 'или футер BREAKING CHANGE:',
+    bump: 'MAJOR',
+    color: 'var(--warn)',
+    bumpColor: 'var(--warn)',
+  },
+] satisfies CommitType[];
+
+export const COMMIT_EXAMPLES = [
+  {
+    bad: 'added password reset',
+    why: 'нет типа, прошедшее время',
+    good: 'feat(auth): add password reset via email',
+  },
+  {
+    bad: 'fix bug',
+    why: 'какой баг? не ясно без открытия diff',
+    good: 'fix(cart): prevent negative quantity',
+  },
+  {
+    bad: 'Refactoring and some fixes.',
+    why: 'два изменения сразу, заглавная, точка',
+    good: 'refactor(api): move fetch to useQuery',
+  },
+  {
+    bad: 'wip / asdf / правки / final2',
+    why: 'ничего не говорит — squash перед PR',
+    good: 'chore(deps): bump react to 19.1',
+  },
+  {
+    bad: 'feat(api): drop v1 endpoints',
+    why: 'ломает API, но нет «!» и футера BREAKING CHANGE — версия не станет 2.0.0',
+    good: 'feat(api)!: drop v1 endpoints',
+  },
+] satisfies CommitExample[];

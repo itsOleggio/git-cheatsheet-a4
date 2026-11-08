@@ -21,32 +21,13 @@
   <div class="s2grid">
     <section class="blk">
       <h2>Типы коммитов</h2>
-      <table class="ttab">
-        <tr style="--c:var(--feat);--c2:var(--main)"><td>feat</td><td>новая функциональность</td><td>MINOR</td></tr>
-        <tr style="--c:var(--fix);--c2:var(--rel)"><td>fix</td><td>исправление бага</td><td>PATCH</td></tr>
-        <tr style="--c:#2dd4bf"><td>refactor</td><td>код без смены поведения</td><td>—</td></tr>
-        <tr style="--c:#facc15;--c2:var(--rel)"><td>perf</td><td>производительность</td><td>PATCH*</td></tr>
-        <tr style="--c:#a3e635"><td>test</td><td>тесты</td><td>—</td></tr>
-        <tr style="--c:var(--rel)"><td>docs</td><td>документация, README</td><td>—</td></tr>
-        <tr style="--c:var(--muted)"><td>style</td><td>форматирование кода</td><td>—</td></tr>
-        <tr style="--c:var(--muted)"><td>build</td><td>сборка, зависимости</td><td>—</td></tr>
-        <tr style="--c:var(--muted)"><td>ci</td><td>пайплайны CI/CD</td><td>—</td></tr>
-        <tr style="--c:var(--muted)"><td>chore</td><td>рутина, конфиги</td><td>—</td></tr>
-        <tr style="--c:var(--warn);--c2:var(--rel)"><td>revert</td><td>откат коммита</td><td>PATCH*</td></tr>
-        <tr style="--c:var(--warn);--c2:var(--warn)"><td>type!</td><td>или футер BREAKING CHANGE:</td><td>MAJOR</td></tr>
-      </table>
+      <table class="ttab" id="ttab"></table>
       <div class="tnote">Спецификация задаёт только feat и fix, остальные типы — соглашение Angular / commitlint и версию сами не меняют. * PATCH — по правилам semantic-release по умолчанию.</div>
     </section>
 
     <section class="blk">
       <h2>Хорошо и плохо</h2>
-      <div class="ex-list">
-        <div class="pairx"><div class="e no"><i>✗</i><span>added password reset</span></div><div class="why">нет типа, прошедшее время</div><div class="e ok" tabindex="0" role="button"><i>✓</i><span>feat(auth): add password reset via email</span></div></div>
-        <div class="pairx"><div class="e no"><i>✗</i><span>fix bug</span></div><div class="why">какой баг? не ясно без открытия diff</div><div class="e ok" tabindex="0" role="button"><i>✓</i><span>fix(cart): prevent negative quantity</span></div></div>
-        <div class="pairx"><div class="e no"><i>✗</i><span>Refactoring and some fixes.</span></div><div class="why">два изменения сразу, заглавная, точка</div><div class="e ok" tabindex="0" role="button"><i>✓</i><span>refactor(api): move fetch to useQuery</span></div></div>
-        <div class="pairx"><div class="e no"><i>✗</i><span>wip / asdf / правки / final2</span></div><div class="why">ничего не говорит — squash перед PR</div><div class="e ok" tabindex="0" role="button"><i>✓</i><span>chore(deps): bump react to 19.1</span></div></div>
-        <div class="pairx"><div class="e no"><i>✗</i><span>feat(api): drop v1 endpoints</span></div><div class="why">ломает API, но нет «!» и футера BREAKING CHANGE — версия не станет 2.0.0</div><div class="e ok" tabindex="0" role="button"><i>✓</i><span>feat(api)!: drop v1 endpoints</span></div></div>
-      </div>
+      <div class="ex-list" id="ex-list"></div>
     </section>
 
     <section class="blk">

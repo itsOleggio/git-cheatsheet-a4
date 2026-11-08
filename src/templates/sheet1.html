@@ -15,17 +15,7 @@
   <div class="grid" id="grid"></div>
   <section class="naming" aria-label="Именование веток">
     <h2>Именование веток <span class="fmt">&lt;тип&gt;/&lt;ТИКЕТ&gt;-&lt;кратко-что-делаем&gt;</span></h2>
-    <table class="ntab" id="ntab">
-      <tr style="--c:var(--feat)"><td>feature/</td><td>новая фича (feat/)</td><td class="ex">feature/SHOP-142-cart-promo-code</td></tr>
-      <tr style="--c:var(--fix)"><td>bugfix/</td><td>баг до релиза (fix/)</td><td class="ex">bugfix/SHOP-201-price-rounding</td></tr>
-      <tr style="--c:var(--warn)"><td>hotfix/</td><td>срочно в прод, от main</td><td class="ex">hotfix/1.4.1-payment-timeout</td></tr>
-      <tr style="--c:var(--rel)"><td>release/</td><td>версия по SemVer</td><td class="ex">release/1.5.0</td></tr>
-      <tr style="--c:var(--muted)"><td>task/</td><td>настройка, миграция</td><td class="ex">task/SHOP-88-migrate-to-vite</td></tr>
-      <tr style="--c:var(--muted)"><td>refactor/</td><td>без смены поведения</td><td class="ex">refactor/SHOP-95-auth-hooks</td></tr>
-      <tr style="--c:var(--muted)"><td>chore/</td><td>зависимости, CI, конфиги</td><td class="ex">chore/bump-react-19</td></tr>
-      <tr style="--c:var(--muted)"><td>docs/ · test/</td><td>документация · тесты</td><td class="ex">docs/SHOP-77-api-readme</td></tr>
-      <tr style="--c:var(--main)"><td>main · develop</td><td>прод · интеграция</td><td class="ex">main</td></tr>
-    </table>
+    <table class="ntab" id="ntab"></table>
     <div class="rules">
       <div><span class="ok">✓</span> <b>латиница, нижний регистр, kebab-case</b>: <code>user-login</code></div>
       <div><span class="ok">✓</span> <b>ID задачи из Jira/YouTrack</b> в имени — ветка, PR и тикет свяжутся автоматически</div>

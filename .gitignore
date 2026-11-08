@@ -1,0 +1,13 @@
+# ОС
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# Редакторы
+.vscode/
+.idea/
+*.swp
+
+# Локальные выгрузки
+*.pdf
+node_modules/

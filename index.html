@@ -1,0 +1,675 @@
+<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="description" content="Интерактивная шпаргалка по Git на двух листах A4: команды, граф веток, именование веток и Conventional Commits.">
+<title>Git A4 Cheatsheet</title>
+
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;600;700&family=Unbounded:wght@500;800&family=IBM+Plex+Sans:wght@400;500&display=swap">
+<style>
+*,*::before,*::after{box-sizing:border-box}
+html{-webkit-text-size-adjust:100%}
+body{margin:0;font:14px system-ui,-apple-system,"Segoe UI",Roboto,sans-serif}
+img{max-width:100%}
+[hidden]{display:none!important}
+</style>
+<style>
+/* Layout: one A4 sheet; a git graph runs across the header, sections hang off coloured lanes like metro stations */
+:root{
+  color-scheme: dark;
+  --bg:#08090b; --sheet:#0d0f12; --line:#1d2128; --fg:#e7e9ee; --muted:#8a90a0;
+  --main:#4ade80; --feat:#b085ff; --fix:#ff9a3c; --rel:#4cc9f0; --tag:#f472b6;
+  --new:#4ade80; --old:#8a90a0; --warn:#ff6b6b;
+  --f-display:"Unbounded", "Arial Black", sans-serif;
+  --f-body:"IBM Plex Sans", "Segoe UI", system-ui, sans-serif;
+  --f-mono:"JetBrains Mono", ui-monospace, "Cascadia Mono", Consolas, monospace;
+}
+*{box-sizing:border-box}
+body{background:var(--bg);color:var(--fg);font-family:var(--f-body);
+  padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));padding-block:20px 40px}
+.tools{max-width:794px;margin:0 auto 12px;display:flex;flex-wrap:wrap;gap:8px;align-items:center}
+.tools{--h:36px}
+.tools input{flex:1 1 180px;min-width:0;height:var(--h);background:var(--sheet);border:1px solid var(--line);color:var(--fg);
+  font:13px var(--f-mono);padding:0 12px;border-radius:6px;margin:0}
+.tools .seg{height:var(--h)}
+.tools .seg button{height:100%;display:flex;align-items:center}
+.tools input:focus-visible,.seg button:focus-visible,.cmd:focus-visible{outline:2px solid var(--rel);outline-offset:2px}
+.seg{display:flex;border:1px solid var(--line);border-radius:6px;overflow:hidden}
+.seg button{background:var(--sheet);color:var(--muted);border:0;font:600 11px var(--f-mono);padding:8px 12px;cursor:pointer;letter-spacing:.04em}
+.seg button[aria-pressed="true"]{background:var(--fg);color:var(--bg)}
+.sheet{max-width:794px;margin:0 auto;background:var(--sheet);border:1px solid var(--line);
+  aspect-ratio:210/297;padding:22px 26px 16px;display:flex;flex-direction:column;gap:10px;position:relative}
+.naming{border-top:1px solid var(--line);padding-top:10px;display:grid;grid-template-columns:minmax(0,1.55fr) minmax(0,1fr);gap:8px 18px}
+.naming h2{grid-column:1/-1;font:500 11px var(--f-display);margin:0;letter-spacing:.06em;text-transform:uppercase;color:var(--fg)}
+.naming h2 .fmt{font:600 11px var(--f-mono);text-transform:none;letter-spacing:0;color:var(--rel);margin-left:8px}
+.ntab{border-collapse:collapse;width:100%;font-size:9.5px}
+.ntab td{padding:2px 6px 2px 0;vertical-align:baseline;border-bottom:1px solid var(--line)}
+.ntab tr:last-child td{border-bottom:0}
+.ntab td:first-child{font:700 10px var(--f-mono);color:var(--c);white-space:nowrap}
+.ntab td:nth-child(2){color:var(--muted)}
+.ntab .ex{font:10px var(--f-mono);color:var(--fg);white-space:nowrap;cursor:pointer;text-align:right}
+.ntab .ex:hover{color:var(--rel)}
+.rules{display:flex;flex-direction:column;gap:5px;font-size:9.5px;color:var(--muted);min-width:0}
+.rules b{color:var(--fg);font-weight:500}
+.rules code{font:600 9.5px var(--f-mono);color:var(--fg)}
+.rules .ok{color:var(--main)} .rules .no{color:var(--warn)}
+.flows{display:flex;flex-direction:column;gap:3px;border-top:1px solid var(--line);padding-top:6px}
+header{display:grid;grid-template-columns:auto 1fr;grid-template-areas:"ttl gr" "sub lg";gap:4px 18px;align-items:start}
+h1{font:800 40px/0.9 var(--f-display);margin:0;letter-spacing:-.02em;text-align:center;position:relative}
+h1 .ln{display:block}
+header .sub{grid-area:sub;align-self:center;font:500 10px var(--f-mono);color:var(--muted);letter-spacing:.18em;text-transform:uppercase;white-space:nowrap}
+header h1{grid-area:ttl} header .graph{grid-area:gr} header .legend{grid-area:lg;align-self:center}
+h1 .ln:first-child{text-align:left}
+.graph{width:100%;height:auto;display:block}
+.graph .lane{transition:opacity .2s, stroke-width .2s}
+.graph.dim .lane{opacity:.18}
+.graph.dim .lane.on{opacity:1}
+.legend{display:flex;flex-wrap:wrap;gap:6px 14px;font:10px var(--f-mono);color:var(--muted)}
+.legend b{display:inline-block;width:8px;height:8px;border-radius:50%;margin-right:5px;vertical-align:middle}
+.badge{font:700 8px var(--f-mono);padding:1px 4px;border-radius:3px;letter-spacing:.05em;vertical-align:1px}
+.badge.new{background:var(--new);color:var(--bg)}
+.badge.old{border:1px solid var(--old);color:var(--old)}
+.grid{flex:1;display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px 14px;align-content:start}
+.sec{border-left:2px solid var(--c);padding:0 0 4px 12px;position:relative;min-width:0}
+.sec::before{content:"";position:absolute;left:-6px;top:2px;width:10px;height:10px;border-radius:50%;background:var(--sheet);border:2px solid var(--c)}
+.sec h2{font:500 11px var(--f-display);margin:0 0 6px;color:var(--c);letter-spacing:.06em;text-transform:uppercase}
+.cmd{display:flex;gap:6px;align-items:baseline;width:100%;text-align:left;background:none;border:0;color:inherit;
+  padding:2px 4px;margin-left:-4px;border-radius:3px;cursor:pointer;font:inherit}
+.cmd:hover{background:var(--line)}
+.cmd code{font:600 10.5px/1.35 var(--f-mono);color:var(--fg);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;min-width:0}
+.cmd .d{font-size:9.5px;color:var(--muted);margin-left:auto;white-space:nowrap;flex-shrink:0;max-width:44%;overflow:hidden;text-overflow:ellipsis}
+.cmd.danger code::after{content:" ⚠";color:var(--warn)}
+.cmd[hidden]{display:none}
+.pair{font:9px var(--f-mono);color:var(--muted);margin:4px 0 2px}
+.pair .arrow{color:var(--c)}
+footer{display:flex;justify-content:space-between;font:9px var(--f-mono);color:var(--muted);border-top:1px solid var(--line);padding-top:8px;gap:12px;flex-wrap:wrap}
+.tip .tl{font:600 10px var(--f-mono);color:var(--muted);text-transform:uppercase;letter-spacing:.06em;margin-bottom:6px}
+.tip{position:fixed;z-index:20;max-width:360px;background:#000;border:1px solid var(--line);border-radius:6px;padding:10px 12px;
+  font-size:12px;line-height:1.45;pointer-events:none;box-shadow:0 8px 30px #0008}
+.tip code{font:600 12px var(--f-mono);color:var(--rel);display:block;margin-bottom:4px}
+.tip .w{color:var(--warn);margin-top:4px}
+.tip .ex{font:11px var(--f-mono);color:var(--muted);margin-top:6px}
+.toast{position:fixed;bottom:calc(20px + env(safe-area-inset-bottom,0px));left:50%;transform:translateX(-50%);background:var(--fg);color:var(--bg);
+  font:600 12px var(--f-mono);padding:8px 14px;border-radius:6px;z-index:30}
+@media (max-width:760px){
+  .sheet{aspect-ratio:auto;padding:20px 16px}
+  header{grid-template-columns:1fr;grid-template-areas:"ttl" "sub" "gr" "lg"}
+  .grid{grid-template-columns:minmax(0,1fr)}
+  h1{font-size:34px}
+  .cmd .d{max-width:50%}
+  .naming{grid-template-columns:minmax(0,1fr)}
+  .ntab .ex{white-space:normal;word-break:break-all}
+}
+
+/* ---- Sheet 2: commit style ---- */
+.sheet>footer{margin-top:auto}
+.s2 .s2grid{margin-top:4px;border-top:1px solid var(--line);padding-top:12px}
+.s2{gap:10px}
+.sheet + .sheet{margin-top:28px}
+.s2 header{grid-template-areas:"ttl an";grid-template-columns:auto 1fr;align-items:center}
+.s2 h1{grid-area:ttl}
+.anat{grid-area:an;min-width:0;display:flex;flex-direction:column;gap:10px}
+.anat .eyebrow{font:500 9.5px var(--f-mono);color:var(--muted);letter-spacing:.14em;text-transform:uppercase}
+.anat .fx{font:700 19px var(--f-mono);letter-spacing:-.01em;white-space:nowrap;background:#000;border:1px solid var(--line);border-radius:6px;padding:10px 14px;overflow:hidden;text-overflow:ellipsis}
+.anat .fx .c-sep{color:var(--muted)}
+.anat .keys{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:12px;font-size:10px;line-height:1.4;color:var(--muted)}
+.anat .k{border-top:2px solid var(--k);padding-top:6px;min-width:0}
+.anat .k b{display:block;font:700 11px var(--f-mono);color:var(--k);margin-bottom:2px}
+.c-type{color:var(--feat)} .c-scope{color:var(--rel)} .c-bang{color:var(--warn)} .c-subj{color:var(--fg)}
+.blk h2{font:500 12px var(--f-display);margin:0 0 8px;letter-spacing:.06em;text-transform:uppercase;color:var(--fg)}
+.blk h2 .h2s{font:500 9.5px var(--f-mono);text-transform:none;letter-spacing:0;color:var(--muted);margin-left:6px}
+.log{overflow-x:auto}
+.log svg{display:block;width:100%;height:auto;min-width:560px}
+.log .row{cursor:pointer}
+.log .row:hover .hl,.log .row:focus-visible .hl{fill:var(--line)}
+.log .row{outline:none}
+.s2grid{display:grid;grid-template-columns:minmax(0,1.05fr) minmax(0,1fr) minmax(0,.95fr);gap:10px 18px;align-items:start}
+.ttab{border-collapse:collapse;width:100%;font-size:10.5px}
+.ttab td{padding:3px 6px 3px 0;border-bottom:1px solid var(--line);vertical-align:baseline}
+.ttab tr:last-child td{border-bottom:0}
+.tnote{font-size:9px;line-height:1.35;color:var(--muted);margin-top:4px}
+.ttab td:first-child{font:700 11px var(--f-mono);color:var(--c);white-space:nowrap}
+.ttab td:nth-child(2){color:var(--muted)}
+.ttab td:last-child{font:700 9.5px var(--f-mono);color:var(--c2,var(--muted));text-align:right;white-space:nowrap}
+.ex-list{display:flex;flex-direction:column;gap:7px}
+.pairx{display:flex;flex-direction:column;gap:1px}
+.ex-list .e{font:10.5px/1.35 var(--f-mono);display:flex;gap:6px;align-items:baseline;padding:1px 4px;margin-left:-4px;border-radius:3px;min-width:0}
+.ex-list .e.ok{cursor:pointer;position:relative;padding-right:18px}
+.ex-list .e.ok:hover,.ex-list .e.ok:focus-visible{background:var(--line);outline:none}
+.ex-list .e.ok::after,.log .row .cp{content:"⧉";position:absolute;right:4px;color:var(--muted);opacity:0;transition:opacity .15s}
+.ex-list .e.ok:hover::after,.ex-list .e.ok:focus-visible::after{opacity:1}
+.ex-list .e i{font-style:normal;flex-shrink:0;width:10px}
+.ex-list .e span{min-width:0;overflow-wrap:anywhere}
+.ex-list .ok i{color:var(--main)} .ex-list .no i{color:var(--warn)} .ex-list .no span{color:var(--muted);text-decoration:line-through;text-decoration-color:#ff6b6b88}
+.ex-list .why{font-size:9.5px;color:var(--muted);padding-left:16px}
+.mini{font-size:10.5px;line-height:1.4;color:var(--muted);display:flex;flex-direction:column;gap:5px}
+.mini b{color:var(--fg);font-weight:500}
+.mini code{font:600 10px var(--f-mono);color:var(--fg)}
+.semver{display:grid;grid-template-columns:auto auto 1fr;gap:4px 8px;font:10.5px var(--f-mono);align-items:baseline}
+.semver .v{color:var(--fg);font-weight:700}
+.semver .n{color:var(--muted);font-family:var(--f-body);font-size:9.5px}
+.full{display:grid;grid-template-columns:minmax(0,1.05fr) minmax(0,1fr) minmax(0,.95fr);gap:10px 18px;border-top:1px solid var(--line);padding-top:12px}
+.full>.blk:first-child{grid-column:span 2}
+.msg{font:10.5px/1.55 var(--f-mono);background:#000;border:1px solid var(--line);border-radius:6px;padding:10px 12px;white-space:pre-wrap;margin:0;cursor:pointer;position:relative;overflow-x:auto}
+.msg .cm{color:var(--muted)}
+.msg:hover,.msg:focus-visible{border-color:var(--rel);outline:none}
+.msg .lbl{position:absolute;right:8px;top:6px;font-size:8.5px;color:var(--muted)}
+.chg{font:10.5px/1.55 var(--f-mono);color:var(--muted)}
+.chg b{color:var(--fg)} .chg .h{color:var(--main)}
+@media (max-width:760px){
+  .s2 header{grid-template-areas:"ttl" "an";grid-template-columns:1fr}
+  .anat .keys{grid-template-columns:repeat(2,minmax(0,1fr))}
+  .s2grid,.full{grid-template-columns:minmax(0,1fr)}
+}
+@media (prefers-reduced-motion:reduce){*{transition:none!important}}
+@media print{
+  @page{size:A4;margin:0}
+  body{padding:0;-webkit-print-color-adjust:exact;print-color-adjust:exact}
+  .tools,.tip,.toast{display:none!important}
+  .sheet{border:0;width:210mm;height:297mm;max-width:none;break-after:page}
+  .sheet + .sheet{margin-top:0}
+}
+</style>
+</head>
+<body>
+
+<div class="tools">
+  <input id="q" type="search" placeholder="Поиск: rebase, stash, отмена…" aria-label="Поиск по командам">
+  <div class="seg" role="group" aria-label="Фильтр">
+    <button id="f-all" data-f="all" aria-pressed="true">ВСЕ</button>
+    <button id="f-new" data-f="new" aria-pressed="false">НОВЫЕ</button>
+    <button id="f-old" data-f="old" aria-pressed="false">СТАРЫЕ</button>
+  </div>
+</div>
+
+<article class="sheet" id="sheet">
+  <header>
+    <h1 id="ttl"><span class="ln">git</span><span class="ln" id="ttl-mid">cheat</span><span class="ln">sheet</span></h1>
+    <svg class="graph" id="graph" viewBox="0 0 520 150" role="img" aria-label="Граф веток main, feature, hotfix, release"></svg>
+      <div class="legend">
+        <span><b style="background:var(--main)"></b>main</span>
+        <span><b style="background:var(--feat)"></b>feature/*</span>
+        <span><b style="background:var(--fix)"></b>hotfix/*</span>
+        <span><b style="background:var(--rel)"></b>release/*</span>
+        <span><span class="badge new">NEW</span> 2.23+</span>
+        <span><span class="badge old">OLD</span> классика</span>
+        <span style="color:var(--warn)">⚠ теряет данные</span>
+      </div>
+    <div class="sub">A4 · Git 2.23 → 2.4x</div>
+  </header>
+  <div class="grid" id="grid"></div>
+  <section class="naming" aria-label="Именование веток">
+    <h2>Именование веток <span class="fmt">&lt;тип&gt;/&lt;ТИКЕТ&gt;-&lt;кратко-что-делаем&gt;</span></h2>
+    <table class="ntab" id="ntab">
+      <tr style="--c:var(--feat)"><td>feature/</td><td>новая фича (feat/)</td><td class="ex">feature/SHOP-142-cart-promo-code</td></tr>
+      <tr style="--c:var(--fix)"><td>bugfix/</td><td>баг до релиза (fix/)</td><td class="ex">bugfix/SHOP-201-price-rounding</td></tr>
+      <tr style="--c:var(--warn)"><td>hotfix/</td><td>срочно в прод, от main</td><td class="ex">hotfix/1.4.1-payment-timeout</td></tr>
+      <tr style="--c:var(--rel)"><td>release/</td><td>версия по SemVer</td><td class="ex">release/1.5.0</td></tr>
+      <tr style="--c:var(--muted)"><td>task/</td><td>настройка, миграция</td><td class="ex">task/SHOP-88-migrate-to-vite</td></tr>
+      <tr style="--c:var(--muted)"><td>refactor/</td><td>без смены поведения</td><td class="ex">refactor/SHOP-95-auth-hooks</td></tr>
+      <tr style="--c:var(--muted)"><td>chore/</td><td>зависимости, CI, конфиги</td><td class="ex">chore/bump-react-19</td></tr>
+      <tr style="--c:var(--muted)"><td>docs/ · test/</td><td>документация · тесты</td><td class="ex">docs/SHOP-77-api-readme</td></tr>
+      <tr style="--c:var(--main)"><td>main · develop</td><td>прод · интеграция</td><td class="ex">main</td></tr>
+    </table>
+    <div class="rules">
+      <div><span class="ok">✓</span> <b>латиница, нижний регистр, kebab-case</b>: <code>user-login</code></div>
+      <div><span class="ok">✓</span> <b>ID задачи из Jira/YouTrack</b> в имени — ветка, PR и тикет свяжутся автоматически</div>
+      <div><span class="ok">✓</span> <b>2–5 слов</b>, глагол или суть: <code>fix-null-avatar</code></div>
+      <div><span class="ok">✓</span> тип ветки совпадает с префиксом коммитов: <code>feat:</code> <code>fix:</code> <code>chore:</code> (Conventional Commits)</div>
+      <div><span class="no">✗</span> <code>Feature/Новая_Кнопка</code>, <code>test123</code>, <code>oleg-branch</code>, <code>fix</code></div>
+      <div><span class="no">✗</span> пробелы, кириллица, <code>~ ^ : ? * [ \</code>, двойные точки</div>
+      <div class="flows">
+        <div><b>Git Flow</b> — main + develop + release/hotfix, релизы по версиям</div>
+        <div><b>GitHub Flow</b> — main + короткие feature-ветки через PR</div>
+        <div><b>Trunk-based</b> — ветки ≤ 1–2 дня, фичи за флагами</div>
+      </div>
+    </div>
+  </section>
+  <footer><span>Клик по команде — копировать · наведи — подсказка</span><span>1 / 2</span></footer>
+</article>
+
+<article class="sheet s2" id="sheet2">
+  <header>
+    <h1 id="ttl2"><span class="ln" style="text-align:left">git</span><span class="ln">commit</span><span class="ln">style</span></h1>
+    <div class="anat">
+      <div class="eyebrow">Формат сообщения · Conventional Commits 1.0 · SemVer 2.0</div>
+      <div class="fx"><span class="c-type">feat</span><span class="c-scope">(cart)</span><span class="c-bang">!</span><span class="c-sep">: </span><span class="c-subj">add promo code field</span></div>
+      <div class="keys">
+        <div class="k" style="--k:var(--feat)"><b>type</b>тип изменения; список задаёт конфиг команды</div>
+        <div class="k" style="--k:var(--rel)"><b>(scope)</b>модуль или область, необязательно</div>
+        <div class="k" style="--k:var(--warn)"><b>!</b>ломает обратную совместимость</div>
+        <div class="k" style="--k:var(--fg)"><b>subject</b>суть изменения, коротко</div>
+      </div>
+    </div>
+    </div>
+  </header>
+
+  <section class="blk">
+    <h2>Как это выглядит в истории<span class="h2s">git log --oneline --graph</span></h2>
+    <div class="legend" style="margin-bottom:6px"><span><b style="background:var(--main)"></b>main</span><span><b style="background:var(--feat)"></b>feature/SHOP-142-cart-promo-code</span><span><b style="background:var(--fix)"></b>hotfix/1.4.1-payment-timeout</span><span><b style="background:var(--tag)"></b>тег релиза</span><span>● залитый — merge-коммит</span></div>
+    <div class="log"><svg id="log" viewBox="0 0 740 240" role="img" aria-label="История коммитов с ветками feature и hotfix"></svg></div>
+  </section>
+
+  <div class="s2grid">
+    <section class="blk">
+      <h2>Типы коммитов</h2>
+      <table class="ttab">
+        <tr style="--c:var(--feat);--c2:var(--main)"><td>feat</td><td>новая функциональность</td><td>MINOR</td></tr>
+        <tr style="--c:var(--fix);--c2:var(--rel)"><td>fix</td><td>исправление бага</td><td>PATCH</td></tr>
+        <tr style="--c:#2dd4bf"><td>refactor</td><td>код без смены поведения</td><td>—</td></tr>
+        <tr style="--c:#facc15;--c2:var(--rel)"><td>perf</td><td>производительность</td><td>PATCH*</td></tr>
+        <tr style="--c:#a3e635"><td>test</td><td>тесты</td><td>—</td></tr>
+        <tr style="--c:var(--rel)"><td>docs</td><td>документация, README</td><td>—</td></tr>
+        <tr style="--c:var(--muted)"><td>style</td><td>форматирование кода</td><td>—</td></tr>
+        <tr style="--c:var(--muted)"><td>build</td><td>сборка, зависимости</td><td>—</td></tr>
+        <tr style="--c:var(--muted)"><td>ci</td><td>пайплайны CI/CD</td><td>—</td></tr>
+        <tr style="--c:var(--muted)"><td>chore</td><td>рутина, конфиги</td><td>—</td></tr>
+        <tr style="--c:var(--warn);--c2:var(--rel)"><td>revert</td><td>откат коммита</td><td>PATCH*</td></tr>
+        <tr style="--c:var(--warn);--c2:var(--warn)"><td>type!</td><td>или футер BREAKING CHANGE:</td><td>MAJOR</td></tr>
+      </table>
+      <div class="tnote">Спецификация задаёт только feat и fix, остальные типы — соглашение Angular / commitlint и версию сами не меняют. * PATCH — по правилам semantic-release по умолчанию.</div>
+    </section>
+
+    <section class="blk">
+      <h2>Хорошо и плохо</h2>
+      <div class="ex-list">
+        <div class="pairx"><div class="e no"><i>✗</i><span>added password reset</span></div><div class="why">нет типа, прошедшее время</div><div class="e ok" tabindex="0" role="button"><i>✓</i><span>feat(auth): add password reset via email</span></div></div>
+        <div class="pairx"><div class="e no"><i>✗</i><span>fix bug</span></div><div class="why">какой баг? не ясно без открытия diff</div><div class="e ok" tabindex="0" role="button"><i>✓</i><span>fix(cart): prevent negative quantity</span></div></div>
+        <div class="pairx"><div class="e no"><i>✗</i><span>Refactoring and some fixes.</span></div><div class="why">два изменения сразу, заглавная, точка</div><div class="e ok" tabindex="0" role="button"><i>✓</i><span>refactor(api): move fetch to useQuery</span></div></div>
+        <div class="pairx"><div class="e no"><i>✗</i><span>wip / asdf / правки / final2</span></div><div class="why">ничего не говорит — squash перед PR</div><div class="e ok" tabindex="0" role="button"><i>✓</i><span>chore(deps): bump react to 19.1</span></div></div>
+        <div class="pairx"><div class="e no"><i>✗</i><span>feat(api): drop v1 endpoints</span></div><div class="why">ломает API, но нет «!» и футера BREAKING CHANGE — версия не станет 2.0.0</div><div class="e ok" tabindex="0" role="button"><i>✓</i><span>feat(api)!: drop v1 endpoints</span></div></div>
+      </div>
+    </section>
+
+    <section class="blk">
+      <h2>Правила</h2>
+      <div class="mini">
+        <div><b>Повелительное наклонение</b>: «add», не «added»/«adds». Проверка: <i>«If applied, this commit will…»</i></div>
+        <div><b>Строчная буква</b>, без точки в конце — проверяет commitlint</div>
+        <div><b>Длина заголовка</b>: ~50, не больше 72 (git); commitlint допускает до 100</div>
+        <div><b>Один коммит — одно изменение.</b> Сложно назвать — значит, коммит пора делить</div>
+        <div><b>Язык</b> — как принято в команде, обычно английский</div>
+        <div><b>Тикет</b> — в футере <code>Refs: SHOP-142</code>; scope — это модуль, а не номер задачи</div>
+        <div><b>Тело</b> — после пустой строки: <i>зачем</i>, а не <i>что</i></div>
+      </div>
+      <h2 style="margin-top:10px">Версия из коммитов</h2>
+      <div class="semver">
+        <span>fix:</span><span class="v">1.4.0 → 1.4.1</span><span class="n">patch</span>
+        <span>feat:</span><span class="v">1.4.1 → 1.5.0</span><span class="n">minor</span>
+        <span>feat!:</span><span class="v">1.5.0 → 2.0.0</span><span class="n">major</span>
+      </div>
+    </section>
+  </div>
+
+  <div class="full">
+    <section class="blk">
+      <h2>Полное сообщение<span class="h2s">git commit (без -m) — откроет редактор</span></h2>
+<pre class="msg" id="fullmsg" tabindex="0" role="button"><span class="lbl">клик — копировать</span><span class="c-type">feat</span><span class="c-scope">(cart)</span>: add promo code field to checkout
+<span class="cm"># ↑ заголовок до 72 символов · пустая строка ↓</span>
+
+Users asked to apply discount codes before payment.
+Validation runs on blur, the total updates without reload.
+<span class="cm"># ↑ тело: зачем и что изменилось, перенос на 72</span>
+
+Refs: SHOP-142
+Co-authored-by: Anna Petrova &lt;anna@company.ru&gt;</pre>
+    </section>
+    <section class="blk">
+      <h2>Автоматизация</h2>
+      <div class="mini">
+        <div><b>commitlint + husky</b> — не даст закоммитить сообщение не по формату</div>
+        <div><b>semantic-release</b> — версия, тег и релиз из истории; <b>release-please</b> — то же через Release PR</div>
+        <div><b>CHANGELOG</b> собирается сам:</div>
+      </div>
+      <div class="chg" style="margin-top:4px"><b class="h">## 1.5.0</b> (2026-11-08)<br><b>Features</b><br>· cart: add promo code field (#142)<br><b class="h">## 1.4.1</b> (2026-11-03)<br><b>Bug Fixes</b><br>· payment: retry request on gateway timeout (#151)</div>
+    </section>
+  </div>
+  <footer><span>Клик по строке истории, ✓-примеру или полному сообщению — копировать</span><span>2 / 2</span></footer>
+</article>
+
+<div class="tip" id="tip" hidden></div>
+<div class="toast" id="toast" hidden></div>
+
+<script>
+const LANES={main:"var(--main)",feat:"var(--feat)",fix:"var(--fix)",rel:"var(--rel)"};
+// c: command, d: short label, t: new/old, x: example/long hint, w: warning, p: pair index
+const S=[
+ {h:"Настройка",l:"main",cmds:[
+  {c:'git config --global user.name "Имя"',d:"имя автора"},
+  {c:'git config --global user.email "a@b.c"',d:"почта автора"},
+  {c:"git config --global init.defaultBranch main",d:"ветка по умолч."},
+  {c:"git init",d:"новый репозиторий"},
+  {c:"git clone <url>",d:"скопировать репо"},
+  {c:"git clone --depth 1 <url>",d:"только последний",x:"Shallow clone: без истории, быстро для CI"},
+  {c:"git clone --filter=blob:none <url>",d:"partial clone",t:"new",x:"Файлы подкачиваются по требованию — быстро для больших репо"},
+ ]},
+ {h:"Изменения",l:"main",cmds:[
+  {c:"git status -sb",d:"краткий статус"},
+  {c:"git add <file>",d:"в индекс"},
+  {c:"git add -p",d:"по кусочкам",x:"Интерактивно выбираешь, какие ханки добавить"},
+  {c:'git commit -m "msg"',d:"коммит"},
+  {c:"git commit --amend",d:"поправить последний",w:"Меняет хэш — не делай после push"},
+  {c:"git diff",d:"рабочая vs индекс"},
+  {c:"git diff --staged",d:"индекс vs HEAD"},
+  {c:"git rm --cached <file>",d:"убрать из git"},
+ ]},
+ {h:"Ветки",l:"feat",pairs:[["git checkout <br>","git switch <br>"],["git checkout -b <br>","git switch -c <br>"]],cmds:[
+  {c:"git switch <branch>",d:"перейти",t:"new"},
+  {c:"git checkout <branch>",d:"перейти",t:"old",x:"Перегружена смыслами — используй switch/restore"},
+  {c:"git switch -c <new>",d:"создать+перейти",t:"new"},
+  {c:"git checkout -b <new>",d:"создать+перейти",t:"old"},
+  {c:"git switch -",d:"предыдущая ветка",t:"new"},
+  {c:"git branch -vv",d:"список + upstream"},
+  {c:"git branch -m <new>",d:"переименовать"},
+  {c:"git branch -d <br>",d:"удалить (смерж.)"},
+  {c:"git branch -D <br>",d:"удалить силой",w:"Несмерженные коммиты останутся только в reflog"},
+ ]},
+ {h:"Отмена",l:"fix",pairs:[["git checkout -- f","git restore f"],["git reset HEAD f","git restore --staged f"]],cmds:[
+  {c:"git restore <file>",d:"сбросить файл",t:"new",w:"Несохранённые правки файла пропадут"},
+  {c:"git checkout -- <file>",d:"сбросить файл",t:"old",w:"Несохранённые правки файла пропадут"},
+  {c:"git restore --staged <file>",d:"из индекса",t:"new"},
+  {c:"git reset HEAD <file>",d:"из индекса",t:"old"},
+  {c:"git restore -s HEAD~1 <file>",d:"версия из коммита",t:"new"},
+  {c:"git reset --soft HEAD~1",d:"откат, правки в индексе"},
+  {c:"git reset --mixed HEAD~1",d:"откат, правки в файлах"},
+  {c:"git reset --hard HEAD~1",d:"откат начисто",w:"Удаляет коммит и все правки"},
+  {c:"git revert <sha>",d:"анти-коммит",x:"Безопасно для общих веток — история не переписывается"},
+  {c:"git clean -fd",d:"удалить untracked",w:"Удаляет неотслеживаемые файлы безвозвратно. Сначала git clean -n"},
+ ]},
+ {h:"Слияние",l:"feat",cmds:[
+  {c:"git merge <br>",d:"влить ветку"},
+  {c:"git merge --no-ff <br>",d:"всегда merge-коммит"},
+  {c:"git merge --squash <br>",d:"одним коммитом"},
+  {c:"git rebase main",d:"перенести на main",w:"Переписывает историю ветки"},
+  {c:"git rebase -i HEAD~3",d:"squash / reword",x:"pick, squash, fixup, reword, drop"},
+  {c:"git rebase --update-refs",d:"двигать стек веток",t:"new",x:"Git 2.38+: обновляет все ветки стека при rebase"},
+  {c:"git cherry-pick <sha>",d:"взять коммит"},
+  {c:"git merge --abort",d:"отменить merge"},
+ ]},
+ {h:"Удалённые",l:"rel",cmds:[
+  {c:"git remote -v",d:"список remote"},
+  {c:"git fetch --prune",d:"скачать, без слияния"},
+  {c:"git pull --rebase",d:"забрать + rebase"},
+  {c:"git push -u origin <br>",d:"первый push"},
+  {c:"git push --force-with-lease",d:"безопасный force",t:"new",x:"Не затрёт чужие коммиты, в отличие от --force"},
+  {c:"git push --force",d:"перезаписать",t:"old",w:"Может затереть чужую работу на сервере"},
+  {c:"git push origin --delete <br>",d:"удалить ветку"},
+  {c:"git push --tags",d:"отправить теги"},
+ ]},
+ {h:"Stash",l:"rel",cmds:[
+  {c:'git stash push -m "wip"',d:"спрятать",t:"new"},
+  {c:"git stash save \"wip\"",d:"спрятать",t:"old",x:"Устарело с 2.16 — используй stash push"},
+  {c:"git stash -u",d:"+ untracked"},
+  {c:"git stash list",d:"список"},
+  {c:"git stash pop",d:"достать и удалить"},
+  {c:"git stash apply stash@{1}",d:"достать копию"},
+ ]},
+ {h:"История",l:"main",cmds:[
+  {c:"git log --oneline --graph --all",d:"граф веток"},
+  {c:"git log -p <file>",d:"история файла"},
+  {c:"git show <sha>",d:"что в коммите"},
+  {c:"git blame -L 10,20 <f>",d:"кто писал строки"},
+  {c:"git reflog",d:"найти потерянное",x:"Все перемещения HEAD — тут найдёшь «потерянное»"},
+  {c:"git bisect start",d:"поиск бага"},
+  {c:"git grep \"TODO\"",d:"поиск в коде"},
+  {c:"git tag -a v1.0 -m \"…\"",d:"тег релиза"},
+ ]},
+ {h:"Современный Git",l:"fix",cmds:[
+  {c:"git worktree add ../hf hotfix",d:"2-я рабочая папка",t:"new",x:"Две ветки открыты одновременно, без stash"},
+  {c:"git sparse-checkout set src/",d:"часть монорепо",t:"new"},
+  {c:"git maintenance start",d:"фоновая оптимизация",t:"new"},
+  {c:"git switch --detach <sha>",d:"detached HEAD",t:"new"},
+  {c:"git range-diff A...B",d:"сравнить версии PR",t:"new"},
+  {c:"git commit --fixup=<sha>",d:"фикс к коммиту",x:"Потом git rebase -i --autosquash"},
+  {c:"git config rerere.enabled true",d:"помнить конфликты"},
+ ]},
+];
+
+// Detailed descriptions for tooltips
+const LONG={
+'git config --global user.name "Имя"':"Задаёт имя, которое попадёт в поле Author каждого коммита. Флаг --global пишет в ~/.gitconfig для всех репозиториев; без него — только в текущий (.git/config).",
+'git config --global user.email "a@b.c"':"Задаёт email автора коммитов. Должен совпадать с почтой в GitHub/GitLab, иначе коммиты не привяжутся к аккаунту.",
+"git config --global init.defaultBranch main":"Меняет имя первой ветки при git init с master на main. Работает с Git 2.28+.",
+"git init":"Создаёт пустой репозиторий в текущей папке: появляется скрытая папка .git с историей и настройками. Файлы при этом ещё не отслеживаются.",
+"git clone <url>":"Скачивает удалённый репозиторий целиком: всю историю, все ветки, и создаёт remote с именем origin. Сразу переключается на ветку по умолчанию.",
+"git clone --depth 1 <url>":"Shallow clone: скачивает только последний коммит без истории. Быстро, подходит для CI и сборки. Минус: log, blame и rebase по старой истории не работают, пока не сделаешь git fetch --unshallow.",
+"git clone --filter=blob:none <url>":"Partial clone (Git 2.19+): скачивает всю историю коммитов, а содержимое файлов скачивает, только когда оно нужно. Для больших репозиториев: история на месте, клонирование быстрое.",
+"git status -sb":"Показывает состояние рабочей папки в кратком виде: -s — короткий формат (M изменён, A добавлен, ?? не отслеживается), -b — текущая ветка и насколько она впереди/позади upstream.",
+"git add <file>":"Добавляет текущее состояние файла в индекс (staging area), чтобы потом закоммитить. git add . добавит всё в текущей папке.",
+"git add -p":"Интерактивное добавление по ханкам (кускам изменений). На каждый кусок отвечаешь y/n/s (разделить)/e (редактировать). Так правки в одном файле можно разбить на несколько коммитов.",
+'git commit -m "msg"':"Создаёт коммит из того, что лежит в индексе, с сообщением msg. Добавь -a, чтобы автоматически закоммитить все изменённые отслеживаемые файлы без git add.",
+"git commit --amend":"Заменяет последний коммит новым: добавляет туда то, что в индексе, и даёт поправить сообщение. Создаётся новый хэш, поэтому после push потребуется force push.",
+"git diff":"Показывает изменения в рабочей папке, которые ещё не добавлены в индекс.",
+"git diff --staged":"Показывает, что уже добавлено в индекс и попадёт в следующий коммит (разница между индексом и HEAD). Синоним — --cached.",
+"git rm --cached <file>":"Перестаёт отслеживать файл, но оставляет его на диске. Пример: случайно закоммитили .env или node_modules: убираешь из git и добавляешь в .gitignore.",
+"git switch <branch>":"Переключает на существующую ветку (Git 2.23+). Работает только с ветками, в отличие от checkout, который делает и многое другое. Если незакоммиченные правки конфликтуют с веткой, переключения не будет.",
+"git checkout <branch>":"Старый способ переключиться на ветку. Проблема checkout в том, что он делает слишком многое: переключает ветки, восстанавливает файлы, отсоединяет HEAD. Ошибка в аргументе может молча перезаписать файл.",
+"git switch -c <new>":"Создаёт новую ветку от текущего коммита и сразу переключается на неё. Можно указать точку старта: git switch -c feat origin/main.",
+"git checkout -b <new>":"Старый эквивалент switch -c: создаёт ветку и переключается на неё. До сих пор работает и встречается во всех туториалах.",
+"git switch -":"Переключает на предыдущую ветку, как cd - в терминале. Помогает переключаться туда-обратно между двумя ветками.",
+"git branch -vv":"Список локальных веток с последним коммитом и привязкой к удалённой ветке ([origin/main: ahead 2, behind 1]). Видно, какие ветки отстали или ушли вперёд.",
+"git branch -m <new>":"Переименовывает текущую ветку. Для другой ветки: git branch -m old new. На сервере старое имя останется: запушь новое и удали старое.",
+"git branch -d <br>":"Удаляет локальную ветку, только если она уже влита в текущую или в свой upstream. Защита от потери коммитов.",
+"git branch -D <br>":"Принудительно удаляет ветку, даже если её коммиты никуда не влиты. Коммиты исчезают не сразу: их ещё можно найти через git reflog в течение ~90 дней.",
+"git restore <file>":"Возвращает файл в рабочей папке к состоянию из индекса (Git 2.23+). Все несохранённые правки в этом файле пропадут без возможности восстановления.",
+"git checkout -- <file>":"Старый способ откатить файл к версии из индекса. Двойной дефис отделяет имя файла от имени ветки. Без него при совпадении имён можно случайно переключить ветку.",
+"git restore --staged <file>":"Убирает файл из индекса (unstage), но правки на диске сохраняются. Ничего не теряется.",
+"git reset HEAD <file>":"Старый способ убрать файл из индекса. Делает то же, что restore --staged. Но reset с другими флагами стирает изменения, поэтому для этой задачи лучше restore.",
+"git restore -s HEAD~1 <file>":"Достаёт версию файла из указанного коммита (-s = --source) и кладёт в рабочую папку. HEAD~1 — предыдущий коммит, можно указать любой хэш или ветку.",
+"git reset --soft HEAD~1":"Отменяет последний коммит, но все его изменения остаются в индексе и готовы к новому коммиту. Так можно переделать коммит или объединить несколько в один.",
+"git reset --mixed HEAD~1":"Режим по умолчанию: отменяет коммит, изменения остаются в файлах, но убраны из индекса. Можно заново выбрать, что и как коммитить.",
+"git reset --hard HEAD~1":"Отменяет коммит и полностью стирает его изменения из индекса и рабочей папки. Незакоммиченные правки пропадут навсегда; сам коммит можно вернуть через reflog.",
+"git revert <sha>":"Создаёт новый коммит, который делает обратное указанному. История не переписывается, поэтому так отменяют уже запушенный коммит в общей ветке.",
+"git clean -fd":"Удаляет все неотслеживаемые файлы (-f) и папки (-d). Сначала запусти git clean -n: покажет, что будет удалено. Добавь -x, чтобы удалить и игнорируемые файлы.",
+"git merge <br>":"Вливает указанную ветку в текущую. Если текущая ветка не ушла вперёд, делает fast-forward (просто двигает указатель), иначе создаёт merge-коммит с двумя родителями.",
+"git merge --no-ff <br>":"Всегда создаёт merge-коммит, даже если возможен fast-forward. В истории остаётся видно, что была отдельная фича-ветка.",
+"git merge --squash <br>":"Собирает все изменения ветки в индекс одним куском, не делая коммит. Дальше делаешь git commit, и вся фича становится одним коммитом.",
+"git rebase main":"Переносит коммиты текущей ветки поверх свежего main, как будто ты начал работу только что. История получается линейной. Все хэши переносимых коммитов меняются.",
+"git rebase -i HEAD~3":"Интерактивный rebase последних 3 коммитов. В редакторе для каждого выбираешь: pick — оставить, reword — сменить сообщение, squash/fixup — склеить с предыдущим, drop — удалить, можно менять порядок строк.",
+"git rebase --update-refs":"Git 2.38+. При rebase стека веток (feat-1 → feat-2 → feat-3) автоматически двигает все промежуточные ветки, а не только текущую. Можно включить навсегда: rebase.updateRefs true.",
+"git cherry-pick <sha>":"Копирует один конкретный коммит из другой ветки в текущую как новый коммит. Например, чтобы перенести багфикс в релизную ветку без остальных изменений.",
+"git merge --abort":"Отменяет слияние, которое остановилось на конфликтах, и возвращает всё как было до merge. Аналог для rebase — git rebase --abort.",
+"git remote -v":"Показывает подключённые удалённые репозитории и их адреса для fetch и push. Добавить новый: git remote add upstream <url>.",
+"git fetch --prune":"Скачивает новые коммиты и ветки с сервера, но не трогает твои локальные ветки. --prune удаляет локальные ссылки на ветки, которых на сервере уже нет.",
+"git pull --rebase":"Делает fetch, а потом переносит твои локальные коммиты поверх полученных вместо merge-коммита. История остаётся линейной. Включить по умолчанию: git config pull.rebase true.",
+"git push -u origin <br>":"Отправляет ветку на сервер и запоминает связь (upstream). После этого достаточно писать просто git push и git pull.",
+"git push --force-with-lease":"Перезаписывает ветку на сервере, но только если там нет коммитов, которых ты не видел при последнем fetch. Нужен после rebase или amend, при этом защищает от затирания работы коллег.",
+"git push --force":"Перезаписывает ветку на сервере твоей версией без проверок. Если кто-то успел запушить свои коммиты, они пропадут. Используй --force-with-lease.",
+"git push origin --delete <br>":"Удаляет ветку на сервере. Локальная ветка остаётся, её удаляй отдельно через git branch -d.",
+"git push --tags":"Отправляет на сервер все локальные теги: обычный push их не отправляет. Один тег: git push origin v1.0.",
+'git stash push -m "wip"':"Прячет незакоммиченные изменения во временное хранилище и очищает рабочую папку. -m задаёт подпись. Можно спрятать только часть: git stash push -- path/file.",
+'git stash save "wip"':"Устаревший синтаксис (deprecated с Git 2.16). Не умеет прятать отдельные файлы. Замени на git stash push -m.",
+"git stash -u":"Прячет вместе с неотслеживаемыми (новыми) файлами. Без -u новые файлы остаются в рабочей папке.",
+"git stash list":"Список всех спрятанных наборов: stash@{0} — самый свежий. Посмотреть содержимое: git stash show -p stash@{0}.",
+"git stash pop":"Возвращает последний stash в рабочую папку и удаляет его из списка. При конфликте stash не удаляется: разреши конфликт и сделай git stash drop.",
+"git stash apply stash@{1}":"Применяет указанный stash, но оставляет его в списке. Пригодится, если те же изменения нужны в нескольких ветках.",
+"git log --oneline --graph --all":"Компактная история всех веток в виде ASCII-графа: каждый коммит одной строкой. Добавь --decorate, чтобы видеть ветки и теги. Алиас: git config --global alias.lg 'log --oneline --graph --all'.",
+"git log -p <file>":"История конкретного файла с полным diff каждого изменения. Добавь --follow, чтобы отслеживать файл через переименования.",
+"git show <sha>":"Показывает метаданные коммита (автор, дата, сообщение) и полный diff. Без аргумента — последний коммит. git show HEAD:path/file выведет файл как он был в коммите.",
+"git blame -L 10,20 <f>":"Для каждой строки 10–20 показывает, в каком коммите и кем она была изменена последний раз. -w игнорирует изменения пробелов, -C ищет перенос кода из других файлов.",
+"git reflog":"Журнал всех перемещений HEAD: коммиты, переключения, reset, rebase. Через него находят потерянные коммиты: нашёл хэш до неудачного reset — выполнил git reset --hard <sha>. Хранится ~90 дней, только локально.",
+"git bisect start":"Бинарный поиск коммита, который внёс баг. Отмечаешь git bisect bad (сломано) и git bisect good <sha> (работало). Git переключает на середину, ты проверяешь и отвечаешь, пока не найдётся виновник. Завершить: git bisect reset.",
+'git grep "TODO"':"Ищет текст по отслеживаемым файлам. Быстрее обычного grep и игнорирует node_modules. -n — номера строк, можно искать в другом коммите: git grep TODO v1.0.",
+'git tag -a v1.0 -m "…"':"Создаёт аннотированный тег с автором, датой и сообщением. Им отмечают релизы. Без -a создаётся лёгкий тег, просто указатель.",
+"git worktree add ../hf hotfix":"Создаёт вторую рабочую папку ../hf с веткой hotfix, привязанную к тому же репозиторию. Можно чинить срочный баг, не трогая и не прятая текущую работу. Удалить: git worktree remove ../hf.",
+"git sparse-checkout set src/":"Оставляет в рабочей папке только указанные директории, остальное не выкачивается на диск. Применяют в монорепозиториях. Вернуть всё: git sparse-checkout disable.",
+"git maintenance start":"Регистрирует репозиторий для фоновых оптимизаций по расписанию: prefetch, commit-graph, упаковка объектов. Ускоряет fetch, log и status в больших репозиториях.",
+"git switch --detach <sha>":"Переходит на конкретный коммит в режиме detached HEAD (без ветки). Подходит, чтобы посмотреть старую версию. Новые коммиты здесь легко потерять, поэтому создай ветку через git switch -c.",
+"git range-diff A...B":"Сравнивает две версии серии коммитов, например PR до и после rebase. Показывает, какие коммиты изменились и как. Нужно при ревью после force-push.",
+"git commit --fixup=<sha>":"Создаёт коммит с пометкой fixup! для указанного коммита. Потом git rebase -i --autosquash сам поставит его в нужное место и склеит. Так исправляют коммиты из середины ветки.",
+"git config rerere.enabled true":"Rerere (reuse recorded resolution) запоминает, как ты разрешил конфликт, и в следующий раз применит то же решение автоматически. Экономит время при частых rebase длинных веток.",
+};
+
+// Graph
+const G=document.getElementById("graph"),NS="http://www.w3.org/2000/svg";
+const el=(t,a)=>{const e=document.createElementNS(NS,t);for(const k in a)e.setAttribute(k,a[k]);return e};
+const Y={rel:20,main:60,feat:100,fix:135};
+const lanes={
+  main:{path:"M10 60 H510",dots:[[30,60],[90,60],[160,60],[250,60],[330,60],[400,60],[480,60]],label:"main"},
+  feat:{path:"M90 60 C110 60 110 100 130 100 H230 C250 100 250 60 250 60",dots:[[150,100],[190,100],[220,100]],label:"feature/login"},
+  fix:{path:"M330 60 C345 60 345 135 360 135 H380 C395 135 400 60 400 60",dots:[[365,135]],label:"hotfix/42"},
+  rel:{path:"M250 60 C265 60 265 20 280 20 H440 C460 20 460 60 480 60",dots:[[300,20],[360,20],[420,20]],label:"release/1.2"},
+};
+for(const k of ["feat","fix","rel","main"]){
+  const g=el("g",{class:"lane","data-l":k});
+  g.append(el("path",{d:lanes[k].path,fill:"none",stroke:LANES[k],"stroke-width":3,"stroke-linecap":"round"}));
+  lanes[k].dots.forEach(([x,y])=>g.append(el("circle",{cx:x,cy:y,r:5,fill:"var(--sheet)",stroke:LANES[k],"stroke-width":2.5})));
+  const lx={main:14,feat:132,fix:300,rel:282}[k], ly={main:52,feat:118,fix:145,rel:12}[k];
+  const t=el("text",{x:lx,y:ly,fill:LANES[k],"font-family":"JetBrains Mono, monospace","font-size":9});t.textContent=lanes[k].label;g.append(t);
+  G.append(g);
+}
+const hd=el("g",{});hd.append(el("rect",{x:462,y:66,width:38,height:14,rx:3,fill:"var(--fg)"}));
+const ht=el("text",{x:468,y:76,fill:"var(--bg)","font-family":"JetBrains Mono, monospace","font-size":8.5,"font-weight":700});ht.textContent="HEAD";hd.append(ht);
+const tg=el("text",{x:394,y:52,fill:"var(--tag)","font-family":"JetBrains Mono, monospace","font-size":8.5});tg.textContent="◆ v1.1.1";
+G.append(hd,tg);
+
+// Align the middle title line with the main branch
+function alignTitle(){
+  const h=document.getElementById("ttl"),m=document.getElementById("ttl-mid");
+  h.style.top="0px";
+  if(innerWidth<=760)return;
+  const g=G.getBoundingClientRect(),mr=m.getBoundingClientRect();
+  const mainY=g.top+g.height*60/150, midY=mr.top+mr.height/2;
+  h.style.top=(mainY-midY)+"px";
+}
+addEventListener("resize",alignTitle);
+(document.fonts?document.fonts.ready:Promise.resolve()).then(alignTitle);alignTitle();
+
+// Sections
+const grid=document.getElementById("grid");
+S.forEach(s=>{
+  const sec=document.createElement("section");sec.className="sec";sec.style.setProperty("--c",LANES[s.l]);sec.dataset.l=s.l;
+  sec.innerHTML=`<h2>${s.h}</h2>`;
+  s.cmds.forEach(c=>{
+    const b=document.createElement("button");b.className="cmd"+(c.w?" danger":"");b.dataset.t=c.t||"";
+    b.innerHTML=`<code></code>${c.t?`<span class="badge ${c.t}">${c.t.toUpperCase()}</span>`:""}<span class="d"></span>`;
+    b.querySelector("code").textContent=c.c;b.querySelector(".d").textContent=c.d;b._c=c;b._sec=s;
+    sec.append(b);
+  });
+  if(s.pairs){s.pairs.forEach(([o,n])=>{const p=document.createElement("div");p.className="pair";p.innerHTML=`<span></span> <span class="arrow">→</span> <span style="color:var(--fg)"></span>`;p.children[0].textContent=o;p.children[2].textContent=n;sec.append(p)})}
+  sec.addEventListener("mouseenter",()=>{G.classList.add("dim");G.querySelector(`[data-l="${s.l}"]`).classList.add("on")});
+  sec.addEventListener("mouseleave",()=>{G.classList.remove("dim");G.querySelectorAll(".on").forEach(e=>e.classList.remove("on"))});
+  grid.append(sec);
+});
+
+// Tooltip
+const tip=document.getElementById("tip");
+grid.addEventListener("mousemove",e=>{
+  const b=e.target.closest(".cmd");if(!b){tip.hidden=true;return}
+  const c=b._c;tip.innerHTML="";
+  const code=document.createElement("code");code.textContent=c.c;tip.append(code);
+  const h=document.createElement("div");h.className="tl";h.textContent=c.d[0].toUpperCase()+c.d.slice(1)+(c.t==="new"?" · новый способ":c.t==="old"?" · старый способ":"");tip.append(h);
+  const d=document.createElement("div");d.textContent=LONG[c.c]||c.x||"";tip.append(d);
+  if(c.x&&LONG[c.c]){const x=document.createElement("div");x.className="ex";x.textContent="→ "+c.x;tip.append(x)}
+  if(c.w){const w=document.createElement("div");w.className="w";w.textContent="⚠ "+c.w;tip.append(w)}
+  tip.hidden=false;
+  const r=tip.getBoundingClientRect();let x=e.clientX+14,y=e.clientY+14;
+  if(x+r.width>innerWidth-8)x=e.clientX-r.width-14;if(y+r.height>innerHeight-8)y=e.clientY-r.height-14;
+  tip.style.left=Math.max(8,x)+"px";tip.style.top=Math.max(8,y)+"px";
+});
+grid.addEventListener("mouseleave",()=>tip.hidden=true);
+
+// Copy
+const toast=document.getElementById("toast");let tt;
+const show=m=>{toast.textContent=m;toast.hidden=false;clearTimeout(tt);tt=setTimeout(()=>toast.hidden=true,1400)};
+grid.addEventListener("click",e=>{
+  const b=e.target.closest(".cmd");if(!b)return;const text=b._c.c;
+  const fallback=()=>{const r=document.createRange();r.selectNodeContents(b.querySelector("code"));const s=getSelection();s.removeAllRanges();s.addRange(r);show("Выделено — нажми Ctrl+C")};
+  try{navigator.clipboard.writeText(text).then(()=>show("Скопировано: "+text),fallback)}catch(_){fallback()}
+});
+
+document.querySelectorAll(".ntab .ex").forEach(td=>{td.title="Скопировать git switch -c";td.addEventListener("click",()=>{
+  const t="git switch -c "+td.textContent;try{navigator.clipboard.writeText(t).then(()=>show("Скопировано: "+t),()=>show(t))}catch(_){show(t)}
+})});
+
+
+// ---- Sheet 2: commit log graph ----
+(function(){
+  const L=document.getElementById("log"),X={main:22,feat:46,hot:70},RH=24,T=14;
+  const TC={feat:"var(--feat)",fix:"var(--fix)",refactor:"#2dd4bf",perf:"#facc15",test:"#a3e635",docs:"var(--rel)",ci:"var(--muted)",chore:"var(--muted)",build:"var(--muted)",style:"var(--muted)",revert:"var(--warn)"};
+  const R=[
+    {l:"main",h:"e41b7d2",m:"chore(release): 1.5.0 [skip ci]",tag:"v1.5.0"},
+    {l:"main",h:"9c03a1f",m:"Merge pull request #142 from feature/SHOP-142-cart-promo-code",merge:true},
+    {l:"feat",h:"5d2e8b0",m:"test(cart): cover promo code validation"},
+    {l:"main",h:"77af3c4",m:"Merge pull request #151 from hotfix/1.4.1-payment-timeout",merge:true,tag:"v1.4.1"},
+    {l:"hot", h:"b18f6e9",m:"fix(payment): retry request on gateway timeout"},
+    {l:"feat",h:"c4a9e12",m:"refactor(cart): extract usePromoCode hook"},
+    {l:"feat",h:"0f6d3ab",m:"feat(cart): add promo code field"},
+    {l:"main",h:"3e8c5a7",m:"chore(release): 1.4.0 [skip ci]",tag:"v1.4.0"},
+    {l:"main",h:"a29d4f1",m:"ci: cache npm dependencies in GitHub Actions"},
+    {l:"main",h:"1b7e0c3",m:"chore: init project with Vite + React"},
+  ];
+  const y=i=>T+i*RH, P=(d,c,w=2.5)=>L.append(el("path",{d,fill:"none",stroke:c,"stroke-width":w,"stroke-linecap":"round"}));
+  const curve=(x1,y1,x2,y2)=>`M${x1} ${y1} C${x1} ${(y1+y2)/2} ${x2} ${(y1+y2)/2} ${x2} ${y2}`;
+  // lanes
+  P(`M${X.main} ${y(0)} V${y(9)}`,"var(--main)");
+  P(`M${X.feat} ${y(2)} V${y(6)}`,"var(--feat)");
+  P(curve(X.main,y(8),X.feat,y(6)),"var(--feat)");     // branch feature from row 8
+  P(curve(X.feat,y(2),X.main,y(1)),"var(--feat)");     // merge feature into row 1
+  P(curve(X.main,y(7),X.hot,y(4)),"var(--fix)");       // hotfix from row 7
+  P(curve(X.hot,y(4),X.main,y(3)),"var(--fix)");       // merge hotfix into row 3
+  // lane labels
+  [["main",X.main,"var(--main)"],["feature/SHOP-142-cart-promo-code",X.feat,"var(--feat)"],["hotfix/1.4.1",X.hot,"var(--fix)"]];
+  const lab=(t,x,yy,c)=>{const e=el("text",{x,y:yy,fill:c,"font-family":"JetBrains Mono, monospace","font-size":9});e.textContent=t;L.append(e)};
+  const LC={main:"var(--main)",feat:"var(--feat)",hot:"var(--fix)"};
+  R.forEach((r,i)=>{
+    const g=el("g",{class:"row",tabindex:0,role:"button","aria-label":"Скопировать: "+r.m});g.dataset.copy=r.m;
+    g.append(el("rect",{class:"hl",x:100,y:y(i)-10,width:636,height:20,rx:3,fill:"transparent"}));
+    g.append(el("circle",{cx:X[r.l],cy:y(i),r:r.merge?6:5,fill:r.merge?LC[r.l]:"var(--sheet)",stroke:LC[r.l],"stroke-width":2.5}));
+    const tx=el("text",{x:108,y:y(i)+3.5,"font-family":"JetBrains Mono, monospace","font-size":10.5});
+    const ts=(t,a)=>{const e=el("tspan",a);e.textContent=t;tx.append(e);return e};
+    ts(r.h+"  ",{fill:"var(--muted)"});
+    const m=r.m.match(/^(\w+)(\([^)]*\))?(!)?:\s(.*)$/);
+    if(m){
+      ts(m[1],{fill:TC[m[1]]||"var(--fg)","font-weight":700});
+      if(m[2])ts(m[2],{fill:"var(--rel)"});
+      if(m[3])ts("!",{fill:"var(--warn)"});
+      ts(": "+m[4],{fill:"var(--fg)"});
+    } else ts(r.m,{fill:"var(--muted)"});
+    g.append(tx);
+    if(r.tag){
+      const w=r.tag.length*6.4+12, bx=736-w;
+      g.append(el("rect",{x:bx,y:y(i)-8,width:w,height:16,rx:3,fill:"none",stroke:"var(--tag)","stroke-width":1}));
+      const t=el("text",{x:bx+6,y:y(i)+3.5,fill:"var(--tag)","font-family":"JetBrains Mono, monospace","font-size":9.5,"font-weight":700});t.textContent=r.tag;g.append(t);
+    }
+    L.append(g);
+  });
+})();
+
+// generic copy for sheet 2
+function copyText(t){try{navigator.clipboard.writeText(t).then(()=>show("Скопировано: "+t.split("\n")[0]),()=>show(t.split("\n")[0]))}catch(_){show(t.split("\n")[0])}}
+document.getElementById("log").addEventListener("click",e=>{const g=e.target.closest(".row");if(g)copyText(g.dataset.copy)});
+document.getElementById("log").addEventListener("keydown",e=>{const g=e.target.closest(".row");if(g&&(e.key==="Enter"||e.key===" ")){e.preventDefault();copyText(g.dataset.copy)}});
+document.querySelectorAll(".ex-list .e.ok").forEach(e=>{const go=()=>copyText(e.querySelector("span").textContent);e.addEventListener("click",go);e.addEventListener("keydown",k=>{if(k.key==="Enter"||k.key===" "){k.preventDefault();go()}})});
+const fm=document.getElementById("fullmsg");fm.addEventListener("keydown",k=>{if(k.key==="Enter"){k.preventDefault();fm.click()}});
+fm.addEventListener("click",()=>{
+  const t=[...document.getElementById("fullmsg").childNodes].filter(n=>!(n.classList&&(n.classList.contains("lbl")||n.classList.contains("cm")))).map(n=>n.textContent).join("").replace(/\n{3,}/g,"\n\n").trim();
+  copyText(t);
+});
+
+// Filter + search
+let F="all";const q=document.getElementById("q");
+function apply(){
+  const s=q.value.trim().toLowerCase();
+  document.querySelectorAll(".sec").forEach(sec=>{
+    let any=false;
+    sec.querySelectorAll(".cmd").forEach(b=>{
+      const c=b._c,okF=F==="all"||c.t===F,okS=!s||(c.c+" "+c.d+" "+(c.x||"")).toLowerCase().includes(s);
+      b.hidden=!(okF&&okS);if(!b.hidden)any=true;
+    });
+    sec.querySelectorAll(".pair").forEach(p=>p.hidden=F!=="all"||!!s);
+    sec.hidden=!any;
+  });
+}
+document.querySelectorAll(".seg button").forEach(b=>b.addEventListener("click",()=>{
+  F=b.dataset.f;document.querySelectorAll(".seg button").forEach(x=>x.setAttribute("aria-pressed",x===b));apply();
+  try{localStorage.setItem("gitcs-f",F)}catch(_){}
+}));
+q.addEventListener("input",apply);
+try{const s=localStorage.getItem("gitcs-f");if(s){document.getElementById("f-"+s)?.click()}}catch(_){}
+</script>
+
+</body>
+</html>

@@ -9,10 +9,13 @@
     "build": "tsc --noEmit && vite build",
     "preview": "vite preview",
     "lint": "eslint . --max-warnings 0",
-    "format": "prettier --write ."
+    "format": "prettier --write .",
+    "test": "vitest run --passWithNoTests",
+    "test:visual": "playwright test"
   },
   "devDependencies": {
     "@eslint/js": "^10.0.1",
+    "@playwright/test": "1.65.0",
     "eslint": "^10.14.0",
     "eslint-config-prettier": "^10.1.8",
     "jsdom": "^31.0.0",

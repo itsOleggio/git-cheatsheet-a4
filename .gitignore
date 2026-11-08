@@ -21,6 +21,7 @@ playwright-report/
 # Переменные окружения и локальные настройки
 .env
 .env.*
+!.env.example
 *.local
 
 # Логи и кэши
